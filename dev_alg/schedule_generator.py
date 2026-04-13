@@ -5,7 +5,8 @@ from conflict_checker import ScheduleConflictChecker
 
 
 class ScheduleGenerator:
-    def __init__(self, tasks: List[LessonTask], time_slots: List[str], auditoriums: List[Auditorium]):
+    def __init__(self, tasks: List[LessonTask], time_slots: List[str],
+                 auditoriums: List[Auditorium]):
         self.tasks = tasks
         self.time_slots = time_slots
         self.auditoriums = auditoriums
@@ -16,11 +17,15 @@ class ScheduleGenerator:
     def generate(self) -> Optional[Dict[str, Dict[str, LessonTask]]]:
         """
             Cортируем задачи от "самых сложных" к "простым"
-            Сложность = меньше свободных дней у преподавателя + строгие требования к аудитории
+            Сложность = меньше свободных дней у преподавателя +
+            строгие требования к аудитории
         """
         sorted_tasks = sorted(
-            self.tasks, 
-            key=lambda t: (len(t.teacher.available_days), 0 if t.subject.required_auditorium_type == "lecture" else 1)
+            self.tasks,
+            key=lambda t: (
+                len(t.teacher.available_days),
+                0 if t.subject.required_auditorium_type == "lecture" else 1
+            )
         )
 
         print("Generating schedule...")
@@ -52,7 +57,10 @@ class ScheduleGenerator:
         day = time_slot.split("_")[0]
 
         # 1. Доступность дней
-        if day not in task.teacher.available_days or day not in aud.available_days:
+        if (
+            day not in task.teacher.available_days or
+            day not in aud.available_days
+        ):
             return False
         # 2. Вместимость
         if task.group.student_count > aud.capacity:
@@ -61,7 +69,10 @@ class ScheduleGenerator:
         if aud.type != task.subject.required_auditorium_type:
             return False
         # 4. Лимит часов преподавателя
-        if self.teacher_hours.get(task.teacher.id, 0) >= task.teacher.max_hours:
+        if (
+            self.teacher_hours.get(task.teacher.id, 0)
+            >= task.teacher.max_hours
+        ):
             return False
         # 5. Проверка коллизий (ядро валидатора)
         if self.checker.has_conflict(self.schedule, task, time_slot, aud.id):
@@ -73,7 +84,9 @@ class ScheduleGenerator:
         if time_slot not in self.schedule:
             self.schedule[time_slot] = {}
         self.schedule[time_slot][aud_id] = task
-        self.teacher_hours[task.teacher.id] = self.teacher_hours.get(task.teacher.id, 0) + 1
+        self.teacher_hours[task.teacher.id] = (
+            self.teacher_hours.get(task.teacher.id, 0) + 1
+        )
 
     def _unplace(self, task: LessonTask, time_slot: str, aud_id: str):
         if time_slot in self.schedule and aud_id in self.schedule[time_slot]:

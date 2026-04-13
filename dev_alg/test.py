@@ -4,7 +4,8 @@ from schedule_generator import ScheduleGenerator
 
 def generate_synthetic_tasks():
     teachers = [
-        Teacher(f"t{i}", f"Teacher_{i}", 20, ["Mon", "Tue", "Wed", "Thu", "Fri"])
+        Teacher(f"t{i}", f"Teacher_{i}", 20,
+                ["Mon", "Tue", "Wed", "Thu", "Fri"])
         for i in range(1, 6)
     ]
     groups = [Group(f"g{i}", f"Group_{i}", 25) for i in range(1, 4)]
@@ -34,9 +35,11 @@ def generate_synthetic_tasks():
                 task_id += 1
     return tasks, auditoriums
 
+
 def main():
     tasks, auditoriums = generate_synthetic_tasks()
-    time_slots = [f"{day}_{p}" for day in ["Mon", "Tue", "Wed", "Thu", "Fri"] for p in range(1, 5)]
+    time_slots = [f"{day}_{p}" for day in ["Mon", "Tue", "Wed", "Thu", "Fri"]
+                  for p in range(1, 5)]
 
     generator = ScheduleGenerator(tasks, time_slots, auditoriums)
     result = generator.generate()
@@ -46,9 +49,18 @@ def main():
         for ts in sorted(result.keys()):
             print(f"{ts.replace('_', ' ')}:")
             for aud_id, task in result[ts].items():
-                print(f"Auditorium: {aud_id} | {task.group.name} | {task.subject.name} | Teacher: {task.teacher.name}")
+                print(
+                    f"Auditorium: {aud_id} | "
+                    f"{task.group.name} | "
+                    f"{task.subject.name} | "
+                    f"Teacher: {task.teacher.name}"
+                )
     else:
-        print("Impossible to generate timetable! Try to extend number of auditoriums or time periods.\n")
+        print(
+            "Impossible to generate timetable! "
+            "Try to extend number of auditoriums or time periods.\n"
+        )
+
 
 if __name__ == "__main__":
     main()
