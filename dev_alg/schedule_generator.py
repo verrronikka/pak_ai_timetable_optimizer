@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
-from conflict_checker import ScheduleConflictChecker
 from models import Auditorium, LessonTask
+from validator import ScheduleValidator
 
 
 class ScheduleGenerator:
@@ -18,7 +18,7 @@ class ScheduleGenerator:
         self.max_search_steps = max_search_steps
         self.schedule: Dict[str, Dict[str, LessonTask]] = {}
         self.teacher_hours: Dict[str, int] = {}
-        self.checker = ScheduleConflictChecker()
+        self.validator = ScheduleValidator()
         self.search_steps = 0
         self.search_aborted = False
 
@@ -100,31 +100,14 @@ class ScheduleGenerator:
         return candidates
 
     def _is_valid(self, task: LessonTask, time_slot: str, aud: Auditorium):
-        day = time_slot.split("_")[0]
-
-        # 1. Доступность дней
-        if (
-            day not in task.teacher.available_days
-            or day not in aud.available_days
-        ):
-            return False
-        # 2. Вместимость
-        if task.group.student_count > aud.capacity:
-            return False
-        # 3. Тип аудитории
-        if aud.type != task.subject.required_auditorium_type:
-            return False
-        # 4. Лимит часов преподавателя
-        if (
-            self.teacher_hours.get(task.teacher.id, 0)
-            >= task.teacher.max_hours
-        ):
-            return False
-        # 5. Проверка коллизий (ядро валидатора)
-        if self.checker.has_conflict(self.schedule, task, time_slot, aud.id):
-            return False
-
-        return True
+        validation = self.validator.validate_placement(
+            schedule=self.schedule,
+            task=task,
+            time_slot=time_slot,
+            auditorium=aud,
+            teacher_hours=self.teacher_hours,
+        )
+        return validation.is_valid
 
     def _place(self, task: LessonTask, time_slot: str, aud_id: str):
         if time_slot not in self.schedule:
