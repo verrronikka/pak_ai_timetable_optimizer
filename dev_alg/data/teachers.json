@@ -1,0 +1,38 @@
+[
+  {
+    "id": "t1",
+    "name": "Алексей Иванов",
+    "max_hours": 24,
+    "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  },
+  {
+    "id": "t2",
+    "name": "Мария Петрова",
+    "max_hours": 24,
+    "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  },
+  {
+    "id": "t3",
+    "name": "Игорь Сидоров",
+    "max_hours": 22,
+    "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  },
+  {
+    "id": "t4",
+    "name": "Ольга Кузнецова",
+    "max_hours": 22,
+    "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  },
+  {
+    "id": "t5",
+    "name": "Владимир Смирнов",
+    "max_hours": 24,
+    "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  },
+  {
+    "id": "t6",
+    "name": "Наталья Орлова",
+    "max_hours": 20,
+    "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  }
+]

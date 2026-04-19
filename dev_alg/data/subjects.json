@@ -1,0 +1,30 @@
+[
+  {
+    "id": "s1",
+    "name": "Дискретная математика",
+    "hours_per_week": 2,
+    "required_auditorium_type": "lecture",
+    "is_lecture": true
+  },
+  {
+    "id": "s2",
+    "name": "Алгоритмы и структуры данных",
+    "hours_per_week": 2,
+    "required_auditorium_type": "practice",
+    "is_lecture": false
+  },
+  {
+    "id": "s3",
+    "name": "Базы данных",
+    "hours_per_week": 2,
+    "required_auditorium_type": "practice",
+    "is_lecture": false
+  },
+  {
+    "id": "s4",
+    "name": "Английский язык",
+    "hours_per_week": 2,
+    "required_auditorium_type": "lecture",
+    "is_lecture": true
+  }
+]

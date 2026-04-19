@@ -10,13 +10,17 @@ class ScheduleGenerator:
         tasks: List[LessonTask],
         time_slots: List[str],
         auditoriums: List[Auditorium],
+        max_search_steps: int = 200000,
     ):
         self.tasks = tasks
         self.time_slots = time_slots
         self.auditoriums = auditoriums
+        self.max_search_steps = max_search_steps
         self.schedule: Dict[str, Dict[str, LessonTask]] = {}
         self.teacher_hours: Dict[str, int] = {}
         self.checker = ScheduleConflictChecker()
+        self.search_steps = 0
+        self.search_aborted = False
 
     def generate(self) -> Optional[Dict[str, Dict[str, LessonTask]]]:
         """
@@ -32,30 +36,68 @@ class ScheduleGenerator:
             ),
         )
 
-        print("Generating schedule...")
-        if self._backtrack(sorted_tasks, 0):
+        self.search_steps = 0
+        self.search_aborted = False
+
+        print("Генерируется расписание...")
+        if self._backtrack(sorted_tasks):
             return self.schedule
-        else:
-            print("Error! Can`t make schedule due to limitations")
+        if self.search_aborted:
+            print(
+                "Ошибка! Достигнут лимит поиска. "
+                "Уменьшите количество задач или увеличьте max_search_steps."
+            )
             return None
 
-    def _backtrack(self, tasks: List[LessonTask], idx: int) -> bool:
+        print(
+            "Ошибка! Не удалось составить расписание при текущих ограничениях"
+        )
+        return None
+
+    def _backtrack(self, tasks: List[LessonTask]) -> bool:
         """Рекурсивный поиск с возвратом."""
-        if idx == len(tasks):
+        if self.search_steps >= self.max_search_steps:
+            self.search_aborted = True
+            return False
+
+        self.search_steps += 1
+
+        if not tasks:
             return True
 
-        task = tasks[idx]
+        # MRV-эвристика: выбираем задачу с минимальным числом вариантов.
+        task = min(tasks, key=self._count_candidates)
+        candidates = self._get_candidates(task)
+        if not candidates:
+            return False
 
+        task_idx = tasks.index(task)
+        remaining_tasks = tasks[:task_idx] + tasks[task_idx + 1 :]
+
+        for time_slot, aud in candidates:
+            self._place(task, time_slot, aud.id)
+
+            if self._backtrack(remaining_tasks):
+                return True
+            self._unplace(task, time_slot, aud.id)
+
+        return False
+
+    def _count_candidates(self, task: LessonTask) -> int:
+        return len(self._get_candidates(task))
+
+    def _get_candidates(
+        self, task: LessonTask
+    ) -> List[tuple[str, Auditorium]]:
+        candidates: List[tuple[str, Auditorium]] = []
         for time_slot in self.time_slots:
             for aud in self.auditoriums:
                 if self._is_valid(task, time_slot, aud):
-                    self._place(task, time_slot, aud.id)
+                    candidates.append((time_slot, aud))
 
-                    if self._backtrack(tasks, idx + 1):
-                        return True
-                    self._unplace(task, time_slot, aud.id)
-
-        return False
+        # Сначала пробуем менее занятые слоты, чтобы снизить коллизии.
+        candidates.sort(key=lambda item: len(self.schedule.get(item[0], {})))
+        return candidates
 
     def _is_valid(self, task: LessonTask, time_slot: str, aud: Auditorium):
         day = time_slot.split("_")[0]

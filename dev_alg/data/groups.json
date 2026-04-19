@@ -1,0 +1,17 @@
+[
+  {
+    "id": "g1",
+    "name": "ПИ-201",
+    "student_count": 26
+  },
+  {
+    "id": "g2",
+    "name": "ПИ-202",
+    "student_count": 28
+  },
+  {
+    "id": "g3",
+    "name": "ПИ-301",
+    "student_count": 24
+  }
+]

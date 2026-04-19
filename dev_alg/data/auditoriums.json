@@ -1,0 +1,62 @@
+[
+  {
+    "id": "L1",
+    "capacity": 120,
+    "type": "lecture",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "L2",
+    "capacity": 80,
+    "type": "lecture",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "P1",
+    "capacity": 30,
+    "type": "practice",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "P2",
+    "capacity": 32,
+    "type": "practice",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "P3",
+    "capacity": 28,
+    "type": "practice",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  }
+]
