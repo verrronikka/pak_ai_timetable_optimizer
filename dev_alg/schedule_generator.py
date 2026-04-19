@@ -1,12 +1,16 @@
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from models import LessonTask, Auditorium
 from conflict_checker import ScheduleConflictChecker
+from models import Auditorium, LessonTask
 
 
 class ScheduleGenerator:
-    def __init__(self, tasks: List[LessonTask], time_slots: List[str],
-                 auditoriums: List[Auditorium]):
+    def __init__(
+        self,
+        tasks: List[LessonTask],
+        time_slots: List[str],
+        auditoriums: List[Auditorium],
+    ):
         self.tasks = tasks
         self.time_slots = time_slots
         self.auditoriums = auditoriums
@@ -16,16 +20,16 @@ class ScheduleGenerator:
 
     def generate(self) -> Optional[Dict[str, Dict[str, LessonTask]]]:
         """
-            Cортируем задачи от "самых сложных" к "простым"
-            Сложность = меньше свободных дней у преподавателя +
-            строгие требования к аудитории
+        Cортируем задачи от "самых сложных" к "простым"
+        Сложность = меньше свободных дней у преподавателя +
+        строгие требования к аудитории
         """
         sorted_tasks = sorted(
             self.tasks,
             key=lambda t: (
                 len(t.teacher.available_days),
-                0 if t.subject.required_auditorium_type == "lecture" else 1
-            )
+                0 if t.subject.required_auditorium_type == "lecture" else 1,
+            ),
         )
 
         print("Generating schedule...")
@@ -58,8 +62,8 @@ class ScheduleGenerator:
 
         # 1. Доступность дней
         if (
-            day not in task.teacher.available_days or
-            day not in aud.available_days
+            day not in task.teacher.available_days
+            or day not in aud.available_days
         ):
             return False
         # 2. Вместимость

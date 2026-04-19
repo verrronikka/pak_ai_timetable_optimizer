@@ -1,0 +1,9 @@
+[tool.ruff]
+line-length = 79
+target-version = "py312"
+extend-exclude = [
+  "reports",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

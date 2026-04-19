@@ -5,13 +5,16 @@ from models import LessonTask
 
 class ScheduleConflictChecker:
     """
-        Возвращает True, если размещение задачи вызовет конфликт.
+    Возвращает True, если размещение задачи вызовет конфликт.
     """
+
     @staticmethod
-    def has_conflict(schedule: Dict[str, Dict[str, LessonTask]],
-                     task: LessonTask,
-                     time_slot: str,
-                     auditorium_id: str):
+    def has_conflict(
+        schedule: Dict[str, Dict[str, LessonTask]],
+        task: LessonTask,
+        time_slot: str,
+        auditorium_id: str,
+    ):
         if time_slot in schedule and auditorium_id in schedule[time_slot]:
             return True
 

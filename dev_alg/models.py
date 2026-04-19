@@ -2,8 +2,9 @@ from typing import List
 
 
 class Teacher:
-    def __init__(self, id: str, name: str, max_hours: int,
-                 available_days: List[str]):
+    def __init__(
+        self, id: str, name: str, max_hours: int, available_days: List[str]
+    ):
         self.id = id
         self.name = name
         self.max_hours = max_hours
@@ -18,8 +19,9 @@ class Group:
 
 
 class Auditorium:
-    def __init__(self, id: str, capacity: int, type: str,
-                 available_days: List[str]):
+    def __init__(
+        self, id: str, capacity: int, type: str, available_days: List[str]
+    ):
         self.id = id
         self.capacity = capacity
         self.type = type
@@ -27,8 +29,14 @@ class Auditorium:
 
 
 class Subject:
-    def __init__(self, id: str, name: str, hours_per_week: int,
-                 required_auditorium_type: str, is_lecture: bool):
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        hours_per_week: int,
+        required_auditorium_type: str,
+        is_lecture: bool,
+    ):
         self.id = id
         self.name = name
         self.hours_per_week = hours_per_week
@@ -37,8 +45,9 @@ class Subject:
 
 
 class LessonTask:
-    def __init__(self, id: str, teacher: Teacher,
-                 group: Group, subject: Subject):
+    def __init__(
+        self, id: str, teacher: Teacher, group: Group, subject: Subject
+    ):
         self.id = id
         self.teacher = teacher
         self.group = group
