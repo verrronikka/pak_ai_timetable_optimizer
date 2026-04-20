@@ -1,0 +1,210 @@
+{
+  "Mon_1": [
+    {
+      "auditorium": "L1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Дискретная математика",
+      "teacher": "Мария Петрова"
+    },
+    {
+      "auditorium": "P1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Алгоритмы и структуры данных",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Mon_2": [
+    {
+      "auditorium": "L1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Дискретная математика",
+      "teacher": "Мария Петрова"
+    },
+    {
+      "auditorium": "P1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Алгоритмы и структуры данных",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Mon_3": [
+    {
+      "auditorium": "L1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Английский язык",
+      "teacher": "Мария Петрова"
+    },
+    {
+      "auditorium": "P1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Базы данных",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Mon_4": [
+    {
+      "auditorium": "L1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Английский язык",
+      "teacher": "Мария Петрова"
+    },
+    {
+      "auditorium": "P1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Базы данных",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Tue_1": [
+    {
+      "auditorium": "L1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Дискретная математика",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Tue_2": [
+    {
+      "auditorium": "L1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Дискретная математика",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Tue_3": [
+    {
+      "auditorium": "L1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Английский язык",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Tue_4": [
+    {
+      "auditorium": "L1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Английский язык",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Wed_1": [
+    {
+      "auditorium": "L1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Дискретная математика",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Wed_2": [
+    {
+      "auditorium": "L1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Дискретная математика",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Wed_3": [
+    {
+      "auditorium": "L1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Английский язык",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Wed_4": [
+    {
+      "auditorium": "L1",
+      "group": "g3",
+      "group_name": "ПИ-301",
+      "subject": "Английский язык",
+      "teacher": "Наталья Орлова"
+    }
+  ],
+  "Thu_1": [
+    {
+      "auditorium": "P1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Алгоритмы и структуры данных",
+      "teacher": "Мария Петрова"
+    }
+  ],
+  "Thu_2": [
+    {
+      "auditorium": "P1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Алгоритмы и структуры данных",
+      "teacher": "Мария Петрова"
+    }
+  ],
+  "Thu_3": [
+    {
+      "auditorium": "P1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Базы данных",
+      "teacher": "Мария Петрова"
+    }
+  ],
+  "Thu_4": [
+    {
+      "auditorium": "P1",
+      "group": "g1",
+      "group_name": "ПИ-201",
+      "subject": "Базы данных",
+      "teacher": "Мария Петрова"
+    }
+  ],
+  "Fri_1": [
+    {
+      "auditorium": "P1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Алгоритмы и структуры данных",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Fri_2": [
+    {
+      "auditorium": "P1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Алгоритмы и структуры данных",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Fri_3": [
+    {
+      "auditorium": "P1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Базы данных",
+      "teacher": "Ольга Кузнецова"
+    }
+  ],
+  "Fri_4": [
+    {
+      "auditorium": "P1",
+      "group": "g2",
+      "group_name": "ПИ-202",
+      "subject": "Базы данных",
+      "teacher": "Ольга Кузнецова"
+    }
+  ]
+}

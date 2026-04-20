@@ -69,6 +69,9 @@ git pull, но установка хука выполняется вручную
 
 1. Сохраняет его в файл `reports/generated/schedule_output.json`.
 
+1. Формирует читаемый отчет
+   `reports/generated/schedule_report.md` в виде таблицы.
+
 Каждая запись содержит: временной слот, аудиторию, группу,
 дисциплину и преподавателя.
 
@@ -77,6 +80,13 @@ git pull, но установка хука выполняется вручную
 ```bash
 cd dev_alg
 python test.py
+```
+
+Примеры параметров:
+
+```bash
+python test.py --output-format markdown
+python test.py --output-format both --max-search-steps 300000
 ```
 
 Процесс работы программы:
@@ -108,11 +118,11 @@ python test.py
 
 Тесты правил находятся в `dev_alg/tests/test_validator.py`.
 
-## Решатель расписания (F5)
+## Solver
 
-Решатель реализован в `dev_alg/schedule_generator.py`.
+Solver реализован в `dev_alg/schedule_generator.py`.
 
-Что делает решатель:
+Что делает solver:
 
 1. Сортирует задачи от более ограниченных к менее ограниченным
 2. Использует backtracking для построения полного расписания
@@ -126,10 +136,25 @@ python test.py
 Контракт результата:
 
 - При успехе `generate()` возвращает словарь расписания и
-   `solve_status == "success"`
+   `solve_status == "успех"`
 - При достижении лимита возвращает `None` и
-   `solve_status == "search_limit"`
+   `solve_status == "лимит_поиска_достигнут"`
 - При отсутствии решения возвращает `None` и
-   `solve_status == "no_solution"`
+   `solve_status == "нет_решения"`
 
 Тесты решателя находятся в `dev_alg/tests/test_solver.py`.
+
+## Читаемый вывод
+
+Модуль `dev_alg/output_formatter.py` формирует markdown-отчет с
+удобной таблицей по дням, парам, аудиториям, группам, дисциплинам и
+преподавателям.
+
+Поддерживаемые форматы сохранения через `--output-format`:
+
+- `json`: только JSON файл `schedule_output.json`
+- `markdown`: только markdown-отчет `schedule_report.md`
+- `both`: JSON и markdown
+
+При неуспешной генерации также создается markdown-отчет с причиной,
+статусом и статистикой поиска.
