@@ -21,6 +21,7 @@ class ScheduleGenerator:
         self.validator = ScheduleValidator()
         self.search_steps = 0
         self.search_aborted = False
+        self.solve_status = "не_начато"
 
     def generate(self) -> Optional[Dict[str, Dict[str, LessonTask]]]:
         """
@@ -38,17 +39,23 @@ class ScheduleGenerator:
 
         self.search_steps = 0
         self.search_aborted = False
+        self.solve_status = "начато"
+        self.schedule = {}
+        self.teacher_hours = {}
 
         print("Генерируется расписание...")
         if self._backtrack(sorted_tasks):
+            self.solve_status = "успех"
             return self.schedule
         if self.search_aborted:
+            self.solve_status = "лимит_поиска_достигнут"
             print(
                 "Ошибка! Достигнут лимит поиска. "
                 "Уменьшите количество задач или увеличьте max_search_steps."
             )
             return None
 
+        self.solve_status = "нет_решения"
         print(
             "Ошибка! Не удалось составить расписание при текущих ограничениях"
         )
@@ -72,7 +79,7 @@ class ScheduleGenerator:
             return False
 
         task_idx = tasks.index(task)
-        remaining_tasks = tasks[:task_idx] + tasks[task_idx + 1 :]
+        remaining_tasks = tasks[:task_idx] + tasks[(task_idx + 1) :]
 
         for time_slot, aud in candidates:
             self._place(task, time_slot, aud.id)

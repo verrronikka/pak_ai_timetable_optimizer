@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -117,7 +118,20 @@ def get_default_output_path() -> str:
     return os.path.join(output_dir, "schedule_output.json")
 
 
-def main():
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Генерация учебного расписания"
+    )
+    parser.add_argument(
+        "--max-search-steps",
+        type=int,
+        default=200000,
+        help="Максимальное количество шагов backtracking",
+    )
+    return parser.parse_args()
+
+
+def main(max_search_steps: int = 200000):
     tasks, auditoriums = load_data_from_json()
     if tasks is None or auditoriums is None:
         return
@@ -127,7 +141,12 @@ def main():
     days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
     time_slots = [f"{day}_{p}" for day in days for p in range(1, 5)]
 
-    generator = ScheduleGenerator(tasks, time_slots, auditoriums)
+    generator = ScheduleGenerator(
+        tasks,
+        time_slots,
+        auditoriums,
+        max_search_steps=max_search_steps,
+    )
     result = generator.generate()
 
     if result:
@@ -148,6 +167,8 @@ def main():
             "status": "failed",
             "reason": "No feasible schedule for current constraints",
             "search_steps": generator.search_steps,
+            "solve_status": generator.solve_status,
+            "max_search_steps": max_search_steps,
         }
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(failure_data, f, ensure_ascii=False, indent=2)
@@ -159,4 +180,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(max_search_steps=args.max_search_steps)
