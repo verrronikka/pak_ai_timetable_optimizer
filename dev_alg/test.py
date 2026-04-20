@@ -1,7 +1,12 @@
+import argparse
 import json
 import os
 
 from models import Auditorium, Group, LessonTask, Subject, Teacher
+from output_formatter import (
+    save_failure_to_markdown,
+    save_schedule_to_markdown,
+)
 from schedule_generator import ScheduleGenerator
 
 
@@ -117,17 +122,49 @@ def get_default_output_path() -> str:
     return os.path.join(output_dir, "schedule_output.json")
 
 
-def main():
+def get_default_markdown_path() -> str:
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    output_dir = os.path.join(project_root, "reports", "generated")
+    os.makedirs(output_dir, exist_ok=True)
+    return os.path.join(output_dir, "schedule_report.md")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Генерация учебного расписания"
+    )
+    parser.add_argument(
+        "--max-search-steps",
+        type=int,
+        default=200000,
+        help="Максимальное количество шагов backtracking",
+    )
+    parser.add_argument(
+        "--output-format",
+        choices=["json", "markdown", "both"],
+        default="both",
+        help="Формат выходного файла расписания",
+    )
+    return parser.parse_args()
+
+
+def main(max_search_steps: int = 200000, output_format: str = "both"):
     tasks, auditoriums = load_data_from_json()
     if tasks is None or auditoriums is None:
         return
 
     output_file = get_default_output_path()
+    markdown_file = get_default_markdown_path()
 
     days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
     time_slots = [f"{day}_{p}" for day in days for p in range(1, 5)]
 
-    generator = ScheduleGenerator(tasks, time_slots, auditoriums)
+    generator = ScheduleGenerator(
+        tasks,
+        time_slots,
+        auditoriums,
+        max_search_steps=max_search_steps,
+    )
     result = generator.generate()
 
     if result:
@@ -142,16 +179,32 @@ def main():
                     f"Teacher: {task.teacher.name}"
                 )
 
-        save_schedule_to_json(result, output_file=output_file)
+        if output_format in ("json", "both"):
+            save_schedule_to_json(result, output_file=output_file)
+        if output_format in ("markdown", "both"):
+            save_schedule_to_markdown(result, output_file=markdown_file)
     else:
         failure_data = {
             "status": "failed",
-            "reason": "No feasible schedule for current constraints",
+            "reason": (
+                "Не удалось составить расписание при текущих ограничениях"
+            ),
             "search_steps": generator.search_steps,
+            "solve_status": generator.solve_status,
+            "max_search_steps": max_search_steps,
         }
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(failure_data, f, ensure_ascii=False, indent=2)
-        print(f"Failure details saved to: {output_file}")
+        if output_format in ("json", "both"):
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(failure_data, f, ensure_ascii=False, indent=2)
+            print(f"Failure details saved to: {output_file}")
+        if output_format in ("markdown", "both"):
+            save_failure_to_markdown(
+                output_file=markdown_file,
+                reason=failure_data["reason"],
+                search_steps=failure_data["search_steps"],
+                solve_status=failure_data["solve_status"],
+                max_search_steps=failure_data["max_search_steps"],
+            )
         print(
             "Impossible to generate timetable! "
             "Try to extend number of auditoriums or time periods.\n"
@@ -159,4 +212,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(
+        max_search_steps=args.max_search_steps,
+        output_format=args.output_format,
+    )
