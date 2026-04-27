@@ -52,14 +52,13 @@ body::before {
 }
 
 .hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
+  display: flex;
+  justify-content: flex-end;
   gap: 20px;
   align-items: stretch;
   margin-bottom: 20px;
 }
 
-.hero__copy,
 .hero__meta,
 .panel {
   background: var(--panel);
@@ -69,9 +68,8 @@ body::before {
   backdrop-filter: blur(18px);
 }
 
-.hero__copy {
-  padding: 28px;
-  min-height: 100%;
+.hero--compact {
+  margin-bottom: 14px;
 }
 
 .eyebrow,
@@ -85,32 +83,16 @@ body::before {
   font-size: 0.74rem;
 }
 
-h1,
 h2,
-h3,
 p {
   margin: 0;
-}
-
-h1 {
-  max-width: 11ch;
-  font-size: clamp(2.4rem, 5vw, 4.8rem);
-  line-height: 0.96;
-  letter-spacing: -0.05em;
-}
-
-.hero__lead {
-  margin-top: 18px;
-  max-width: 62ch;
-  color: var(--muted);
-  font-size: 1.02rem;
-  line-height: 1.7;
 }
 
 .hero__meta {
   display: grid;
   gap: 14px;
   padding: 16px;
+  width: min(420px, 100%);
 }
 
 .meta-card {
@@ -330,39 +312,9 @@ h1 {
   min-width: 150px;
 }
 
-.empty-state {
-  margin-top: 18px;
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  padding: 18px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(126, 224, 196, 0.09), rgba(101, 184, 255, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
 .is-hidden {
   display: none !important;
 }
-
-.empty-state__icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  font-size: 1.7rem;
-  color: var(--accent);
-  background: rgba(255, 255, 255, 0.05);
-  flex: none;
-}
-
-.empty-state h3 {
-  font-size: 1rem;
-  margin-bottom: 6px;
-}
-
-.empty-state p,
 .mini-card p {
   color: var(--muted);
   line-height: 1.6;
@@ -450,11 +402,6 @@ h1 {
   color: #d5e0ff;
 }
 
-.mini-card--highlight {
-  background: linear-gradient(135deg, rgba(255, 211, 106, 0.12), rgba(101, 184, 255, 0.1));
-  border-color: rgba(255, 211, 106, 0.18);
-}
-
 @keyframes shimmer {
   0% {
     background-position: 0% 50%;
@@ -465,7 +412,15 @@ h1 {
 }
 
 @media (max-width: 1080px) {
-  .hero,
+  .hero {
+    justify-content: stretch;
+  }
+
+  .hero__meta,
+  .dashboard {
+    width: 100%;
+  }
+
   .dashboard {
     grid-template-columns: 1fr;
   }
@@ -477,22 +432,17 @@ h1 {
     padding-top: 18px;
   }
 
-  .hero__copy,
+  .hero__meta,
   .panel {
     padding: 20px;
   }
 
-  .panel__header,
-  .empty-state {
+  .panel__header {
     flex-direction: column;
     align-items: stretch;
   }
 
   .status-pill {
     width: fit-content;
-  }
-
-  h1 {
-    max-width: none;
   }
 }

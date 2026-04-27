@@ -14,21 +14,8 @@
   </head>
   <body>
     <div class="page-shell">
-      <header class="hero">
-        <div class="hero__copy">
-          <p class="eyebrow">MVP интерфейс</p>
-          <h1>Просмотр расписания и статуса генерации</h1>
-          <p class="hero__lead">
-            Каркас будущего экрана: здесь появится результат генерации,
-            сообщения о статусе и действия пользователя.
-          </p>
-        </div>
-
+      <header class="hero hero--compact">
         <div class="hero__meta">
-          <div class="meta-card">
-            <span class="meta-card__label">Источник</span>
-            <span class="meta-card__value">Backend API</span>
-          </div>
           <div class="meta-card meta-card--accent">
             <span class="meta-card__label">Статус</span>
             <span class="meta-card__value" id="hero-status-value"
@@ -63,11 +50,7 @@
 
           <div class="panel__header">
             <div>
-              <p class="panel__kicker">Расписание</p>
-              <h2>Таблица результата</h2>
-            </div>
-            <div class="status-pill status-pill--idle" id="table-status-pill">
-              Нет активной генерации
+              <h2>Расписание</h2>
             </div>
           </div>
 
@@ -87,17 +70,6 @@
             </table>
           </div>
 
-          <div class="empty-state">
-            <div class="empty-state__icon">⌁</div>
-            <div>
-              <h3>Здесь появится реальное расписание</h3>
-              <p>
-                После подключения генерации этот экран будет показывать
-                актуальный результат, статус и причину ошибки, если расписание
-                не удалось построить.
-              </p>
-            </div>
-          </div>
         </section>
 
         <aside class="panel panel--side">
@@ -134,33 +106,6 @@
               </p>
             </div>
           </article>
-
-          <div class="stacked-cards">
-            <article class="mini-card">
-              <span class="mini-card__label">Состояние</span>
-              <strong id="status-card-state">Ожидаем запуск</strong>
-              <p id="status-card-state-help">
-                Панель будет показывать pending, running, completed и failed.
-              </p>
-            </article>
-
-            <article class="mini-card">
-              <span class="mini-card__label">Последний результат</span>
-              <strong id="status-card-last-result">Нет данных</strong>
-              <p id="status-card-last-result-help">
-                После вызова API здесь появится краткая сводка по последнему job.
-              </p>
-            </article>
-
-            <article class="mini-card mini-card--highlight">
-              <span class="mini-card__label">Демо</span>
-              <strong>Демонастрационный экран</strong>
-              <p>
-                Акцент на понятном статусе, аккуратной таблице и заметных
-                состояниях ошибок.
-              </p>
-            </article>
-          </div>
         </aside>
       </main>
     </div>

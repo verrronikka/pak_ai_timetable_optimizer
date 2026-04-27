@@ -18,6 +18,7 @@ export const ERROR_KIND = {
   VALIDATION: "validation",
   NO_SOLUTION: "no_solution",
   SERVER: "server",
+  LIMIT_REACHED: "limit_reached",
   UNKNOWN: "unknown",
 };
 
@@ -44,21 +45,29 @@ function parseSlot(slot) {
 }
 
 function toUiStatus(status) {
-  switch (status) {
+  const token = String(status ?? "").toLowerCase();
+
+  switch (token) {
     case "pending":
       return UI_STATUS.PENDING;
     case "running":
       return UI_STATUS.RUNNING;
     case "completed":
+    case "success":
+    case "успех":
       return UI_STATUS.COMPLETED;
     case "failed":
+    case "нет_решения":
+    case "лимит_поиска_достигнут":
       return UI_STATUS.FAILED;
     default:
       return UI_STATUS.IDLE;
   }
 }
 
-function toStatusLabel(uiStatus) {
+function toStatusLabel(uiStatus, solveStatus) {
+  const solveToken = String(solveStatus ?? "").toLowerCase();
+
   switch (uiStatus) {
     case UI_STATUS.PENDING:
       return "В очереди";
@@ -67,25 +76,66 @@ function toStatusLabel(uiStatus) {
     case UI_STATUS.COMPLETED:
       return "Готово";
     case UI_STATUS.FAILED:
+      if (solveToken === "нет_решения") {
+        return "Нет решения";
+      }
+      if (solveToken === "лимит_поиска_достигнут") {
+        return "Достигнут лимит поиска";
+      }
       return "Ошибка генерации";
     default:
       return "Нет активной генерации";
   }
 }
 
-function classifyError(message) {
+function classifyError(message, solveStatus, errorStatus) {
+  const solveToken = String(solveStatus ?? "").toLowerCase();
+  if (solveToken === "нет_решения") {
+    return ERROR_KIND.NO_SOLUTION;
+  }
+  if (solveToken === "лимит_поиска_достигнут") {
+    return ERROR_KIND.LIMIT_REACHED;
+  }
+
+  if (Number.isFinite(errorStatus)) {
+    if (errorStatus === 400 || errorStatus === 422) {
+      return ERROR_KIND.VALIDATION;
+    }
+    if (errorStatus === 0 || errorStatus >= 500) {
+      return ERROR_KIND.SERVER;
+    }
+  }
+
   if (!message) {
     return null;
   }
 
   const text = message.toLowerCase();
-  if (text.includes("validation") || text.includes("невалид")) {
+  if (
+    text.includes("validation") ||
+    text.includes("невалид") ||
+    text.includes("unprocessable") ||
+    text.includes("field required") ||
+    text.includes("must be") ||
+    text.includes("http 400") ||
+    text.includes("http 422")
+  ) {
     return ERROR_KIND.VALIDATION;
   }
   if (text.includes("нет_решения") || text.includes("не удалось составить")) {
     return ERROR_KIND.NO_SOLUTION;
   }
-  if (text.includes("500") || text.includes("timeout") || text.includes("network")) {
+  if (text.includes("лимит_поиска_достигнут") || text.includes("лимит")) {
+    return ERROR_KIND.LIMIT_REACHED;
+  }
+  if (
+    text.includes("http 0") ||
+    text.includes("http 5") ||
+    text.includes("500") ||
+    text.includes("timeout") ||
+    text.includes("network") ||
+    text.includes("сетевая ошибка")
+  ) {
     return ERROR_KIND.SERVER;
   }
 
@@ -136,21 +186,35 @@ export function buildScheduleViewModel(job, scheduleResponse) {
     return { ...EMPTY_VIEW_MODEL };
   }
 
-  const backendStatus = scheduleResponse?.status ?? job?.status;
-  const uiStatus = toUiStatus(backendStatus);
+  const solveStatus = scheduleResponse?.schedule?.solve_status ?? null;
+  const backendStatus = scheduleResponse?.status ?? job?.status ?? solveStatus;
+  let uiStatus = toUiStatus(backendStatus);
+  if (uiStatus === UI_STATUS.COMPLETED && toUiStatus(solveStatus) === UI_STATUS.FAILED) {
+    uiStatus = UI_STATUS.FAILED;
+  }
   const schedulePayload = scheduleResponse?.schedule?.schedule;
-  const errorMessage = scheduleResponse?.error_message ?? null;
+  const errorStatus = Number(scheduleResponse?.error_status);
+  const fallbackErrorBySolveStatus =
+    solveStatus === "нет_решения"
+      ? "Не удалось составить расписание при текущих ограничениях"
+      : solveStatus === "лимит_поиска_достигнут"
+        ? "Достигнут лимит шагов поиска при генерации"
+        : null;
+  const errorMessage = scheduleResponse?.error_message ?? fallbackErrorBySolveStatus;
 
   return {
     jobId: scheduleResponse?.job_id ?? job?.id ?? null,
     status: uiStatus,
-    statusLabel: toStatusLabel(uiStatus),
+    statusLabel: toStatusLabel(uiStatus, solveStatus),
+    backendStatus: backendStatus ?? null,
+    solveStatus,
     updatedAt: job?.completed_at ?? job?.created_at ?? null,
     rows: flattenSchedule(schedulePayload),
     error: errorMessage
       ? {
-          kind: classifyError(errorMessage),
+          kind: classifyError(errorMessage, solveStatus, errorStatus),
           message: errorMessage,
+          status: Number.isFinite(errorStatus) ? errorStatus : null,
         }
       : null,
   };

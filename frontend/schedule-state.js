@@ -25,6 +25,15 @@ function notify() {
   listeners.forEach((listener) => listener(currentViewModel));
 }
 
+function clearDemoQueryParam() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("demo")) {
+    return;
+  }
+  url.searchParams.delete("demo");
+  window.history.replaceState({}, "", url);
+}
+
 export function getCurrentViewModel() {
   return currentViewModel;
 }
@@ -42,5 +51,12 @@ export function setScenario(nextScenario) {
   currentScenario = nextScenario;
   currentViewModel = buildViewModelByScenario(nextScenario);
   syncUrlScenario(nextScenario);
+  notify();
+}
+
+export function setApiSnapshot({ job = null, scheduleResponse = null } = {}) {
+  currentScenario = "api";
+  currentViewModel = buildScheduleViewModel(job, scheduleResponse);
+  clearDemoQueryParam();
   notify();
 }

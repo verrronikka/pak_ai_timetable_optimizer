@@ -8,6 +8,7 @@ const bannerMessage = document.getElementById("global-error-message");
 const TITLE_BY_KIND = {
   [ERROR_KIND.VALIDATION]: "Ошибка входных данных",
   [ERROR_KIND.NO_SOLUTION]: "Решение не найдено",
+  [ERROR_KIND.LIMIT_REACHED]: "Достигнут лимит поиска",
   [ERROR_KIND.SERVER]: "Ошибка сервиса",
   [ERROR_KIND.UNKNOWN]: "Ошибка генерации",
 };

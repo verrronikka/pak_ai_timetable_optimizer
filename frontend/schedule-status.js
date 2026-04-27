@@ -6,8 +6,6 @@ const heroStatusValue = document.getElementById("hero-status-value");
 const heroUpdatedValue = document.getElementById("hero-updated-value");
 const cardState = document.getElementById("status-card-state");
 const cardStateHelp = document.getElementById("status-card-state-help");
-const cardLastResult = document.getElementById("status-card-last-result");
-const cardLastResultHelp = document.getElementById("status-card-last-result-help");
 
 const STATUS_CLASS = {
   [UI_STATUS.IDLE]: "status-pill--idle",
@@ -24,6 +22,17 @@ const STATUS_HELP = {
   [UI_STATUS.COMPLETED]: "Расписание успешно построено и готово к просмотру.",
   [UI_STATUS.FAILED]: "Генерация завершилась ошибкой. Нужна диагностика.",
 };
+
+function getStatusHelp(viewModel) {
+  if (viewModel.solveStatus === "нет_решения") {
+    return "При текущих ограничениях решение не найдено.";
+  }
+  if (viewModel.solveStatus === "лимит_поиска_достигнут") {
+    return "Поиск остановлен из-за лимита шагов. Можно увеличить max_search_steps.";
+  }
+
+  return STATUS_HELP[viewModel.status] ?? STATUS_HELP[UI_STATUS.IDLE];
+}
 
 function formatUpdatedAt(dateIsoString) {
   if (!dateIsoString) {
@@ -54,23 +63,26 @@ function applyPillStyle(status) {
 }
 
 function renderStatus(viewModel) {
-  statusPill.textContent = viewModel.statusLabel;
-  heroStatusValue.textContent = viewModel.statusLabel;
-  heroUpdatedValue.textContent = formatUpdatedAt(viewModel.updatedAt);
+  if (statusPill) {
+    statusPill.textContent = viewModel.statusLabel;
+  }
+  if (heroStatusValue) {
+    heroStatusValue.textContent = viewModel.statusLabel;
+  }
+  if (heroUpdatedValue) {
+    heroUpdatedValue.textContent = formatUpdatedAt(viewModel.updatedAt);
+  }
 
-  cardState.textContent = viewModel.statusLabel;
-  cardStateHelp.textContent =
-    STATUS_HELP[viewModel.status] ?? STATUS_HELP[UI_STATUS.IDLE];
+  if (cardState) {
+    cardState.textContent = viewModel.statusLabel;
+  }
+  if (cardStateHelp) {
+    cardStateHelp.textContent = getStatusHelp(viewModel);
+  }
 
-  const hasRows = viewModel.rows.length > 0;
-  cardLastResult.textContent = hasRows
-    ? `Job #${viewModel.jobId ?? "—"}: ${viewModel.rows.length} строк`
-    : "Нет данных";
-  cardLastResultHelp.textContent = hasRows
-    ? "Последний результат успешно подгружен в таблицу." 
-    : "После вызова API здесь появится краткая сводка по последнему job.";
-
-  applyPillStyle(viewModel.status);
+  if (statusPill) {
+    applyPillStyle(viewModel.status);
+  }
 }
 
 renderStatus(getCurrentViewModel());

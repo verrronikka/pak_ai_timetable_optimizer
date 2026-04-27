@@ -22,13 +22,27 @@ function createCell(value, className) {
   return td;
 }
 
-function renderEmptyMessage() {
+function getEmptyMessage(viewModel) {
+  if (viewModel.status === UI_STATUS.FAILED) {
+    return "Расписание не построено. Причина указана в баннере ошибки.";
+  }
+  if (viewModel.status === UI_STATUS.COMPLETED) {
+    return "Генерация завершена, но итоговых строк расписания нет.";
+  }
+  if (viewModel.status === UI_STATUS.PENDING || viewModel.status === UI_STATUS.RUNNING) {
+    return "Генерация выполняется. Таблица заполнится автоматически.";
+  }
+
+  return "Пока нет строк расписания для отображения.";
+}
+
+function renderEmptyMessage(viewModel) {
   const row = document.createElement("tr");
   row.className = "schedule-row schedule-row--empty";
 
   const cell = document.createElement("td");
   cell.colSpan = 6;
-  cell.textContent = "Пока нет строк расписания для отображения.";
+  cell.textContent = getEmptyMessage(viewModel);
 
   row.appendChild(cell);
   tableBody.appendChild(row);
@@ -51,11 +65,11 @@ function renderLoadingRows() {
   }
 }
 
-function renderRows(rows) {
+function renderRows(rows, viewModel) {
   tableBody.innerHTML = "";
 
   if (!rows.length) {
-    renderEmptyMessage();
+    renderEmptyMessage(viewModel);
     return;
   }
 
@@ -81,6 +95,9 @@ function renderRows(rows) {
 }
 
 function toggleEmptyPanel(isVisible) {
+  if (!emptyStatePanel) {
+    return;
+  }
   emptyStatePanel.classList.toggle("is-hidden", !isVisible);
 }
 
@@ -97,7 +114,7 @@ function renderTableByState(viewModel) {
     return;
   }
 
-  renderRows(viewModel.rows);
+  renderRows(viewModel.rows, viewModel);
   toggleEmptyPanel(viewModel.rows.length === 0);
 }
 
