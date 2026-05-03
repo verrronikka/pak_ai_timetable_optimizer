@@ -1,17 +1,22 @@
-from sqlalchemy import create_engine, Column, Integer, String, JSON, DateTime
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
+from sqlalchemy import JSON, Column, DateTime, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
-from datetime import datetime
 
 Base = declarative_base()
-engine = create_engine("sqlite:///./timetable.db", connect_args={"check_same_thread": False})
+engine = create_engine(
+    "sqlite:///./timetable.db",
+    connect_args={"check_same_thread": False},
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 class GenerationJob(Base):
     __tablename__ = "generation_jobs"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     status = Column(String, default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -20,22 +25,26 @@ class GenerationJob(Base):
     error_message = Column(String, nullable=True)
     max_search_steps = Column(Integer, default=200000)
 
+
 class TeacherInput(BaseModel):
     id: str
     name: str
     max_hours: int
     available_days: List[str]
 
+
 class GroupInput(BaseModel):
     id: str
     name: str
     student_count: int
+
 
 class AuditoriumInput(BaseModel):
     id: str
     capacity: int
     type: str
     available_days: List[str]
+
 
 class SubjectInput(BaseModel):
     id: str
@@ -44,6 +53,14 @@ class SubjectInput(BaseModel):
     required_auditorium_type: str
     is_lecture: bool
 
+
+class ErrorResponse(BaseModel):
+    error: str
+    message: str
+    details: Optional[Dict[str, Any]] = None
+    job_id: Optional[int] = None
+
+
 class ScheduleRequest(BaseModel):
     teachers: List[TeacherInput]
     groups: List[GroupInput]
@@ -51,9 +68,11 @@ class ScheduleRequest(BaseModel):
     subjects: List[SubjectInput]
     max_search_steps: Optional[int] = 200000
 
+
 class ScheduleResponse(BaseModel):
     job_id: int
     status: str
     schedule: Optional[Dict[str, Any]] = None
+    error: Optional[ErrorResponse] = None
     error_message: Optional[str] = None
     message: Optional[str] = None

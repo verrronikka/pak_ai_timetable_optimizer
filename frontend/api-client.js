@@ -33,6 +33,8 @@ function buildApiError({ method, path, status, payload }) {
         return `${location}: ${itemMessage}`;
       })
       .join("; ");
+  } else if (detail && typeof detail === "object") {
+    detailMessage = detail.message ?? JSON.stringify(detail);
   }
 
   const message = detailMessage
