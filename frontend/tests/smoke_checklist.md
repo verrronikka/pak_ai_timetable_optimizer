@@ -11,8 +11,9 @@
 2. `?demo=loading` — таблица показывает skeleton, статус "Генерация идёт".
 3. `?demo=empty` — таблица пустая, отображается empty-state.
 4. `?demo=validation` — показывается баннер ошибки входных данных.
-5. `?demo=error` — показывается общий баннер ошибки.
-6. `?demo=idle` — статус "Нет активной генерации", пустая таблица.
+5. `?demo=limit` — показывается баннер "Достигнут лимит поиска".
+6. `?demo=error` — показывается общий баннер ошибки.
+7. `?demo=idle` — статус "Нет активной генерации", пустая таблица.
 
 ## UI-действия генерации
 
@@ -24,7 +25,7 @@
 
 1. `POST /api/generate` с валидным payload возвращает `pending`, затем `completed`.
 2. `POST /api/generate` с пустым списком преподавателей возвращает `400` и `validation_error`.
-3. `GET /api/schedule/{job_id}` для `failed` job показывает `no_solution` или `server_error` в баннере.
+3. `GET /api/schedule/{job_id}` для `failed` job показывает `no_solution`, `limit_reached` или `server_error` в баннере.
 
 ## Базовая визуальная проверка
 

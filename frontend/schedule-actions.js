@@ -310,6 +310,7 @@ if (
   initialScenario === "ready" ||
   initialScenario === "empty" ||
   initialScenario === "validation" ||
+  initialScenario === "limit" ||
   initialScenario === "error"
 ) {
   resultModeSelect.value = initialScenario;

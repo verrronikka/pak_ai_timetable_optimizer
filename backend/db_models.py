@@ -2,13 +2,22 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 from sqlalchemy import JSON, Column, DateTime, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+
+class Settings(BaseSettings):
+    database_url: str = "sqlite:///./timetable.db"
+    default_max_search_steps: int = 200000
+
+
+settings = Settings()
+
 Base = declarative_base()
 engine = create_engine(
-    "sqlite:///./timetable.db",
+    settings.database_url,
     connect_args={"check_same_thread": False},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -66,7 +75,7 @@ class ScheduleRequest(BaseModel):
     groups: List[GroupInput]
     auditoriums: List[AuditoriumInput]
     subjects: List[SubjectInput]
-    max_search_steps: Optional[int] = 200000
+    max_search_steps: Optional[int] = settings.default_max_search_steps
 
 
 class ScheduleResponse(BaseModel):

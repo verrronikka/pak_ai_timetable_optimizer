@@ -119,6 +119,22 @@ const VALIDATION_RESPONSE = {
   error_message: "validation_error: Список преподавателей не может быть пустым.",
 };
 
+const LIMIT_JOB = {
+  id: 22,
+  status: "failed",
+  created_at: "2026-04-26T13:30:00Z",
+  completed_at: "2026-04-26T13:30:02Z",
+};
+
+const LIMIT_RESPONSE = {
+  job_id: 22,
+  status: "failed",
+  schedule: {
+    schedule: {},
+  },
+  error_message: "лимит_поиска_достигнут: Достигнут лимит поиска при генерации.",
+};
+
 export function getDemoScenario() {
   const params = new URLSearchParams(window.location.search);
   const scenario = params.get("demo");
@@ -126,6 +142,8 @@ export function getDemoScenario() {
     scenario === "idle" ||
     scenario === "loading" ||
     scenario === "empty" ||
+    scenario === "validation" ||
+    scenario === "limit" ||
     scenario === "error"
   ) {
     return scenario;
@@ -160,6 +178,13 @@ export function getDemoPayloadByScenario(scenario) {
     return {
       demoJob: VALIDATION_JOB,
       demoScheduleResponse: VALIDATION_RESPONSE,
+    };
+  }
+
+  if (scenario === "limit") {
+    return {
+      demoJob: LIMIT_JOB,
+      demoScheduleResponse: LIMIT_RESPONSE,
     };
   }
 

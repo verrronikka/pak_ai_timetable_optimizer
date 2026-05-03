@@ -123,6 +123,34 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(payload["detail"]["error"], "validation_error")
         self.assertEqual(payload["detail"]["details"]["field"], "groups")
 
+    def test_generate_rejects_duplicate_teacher_ids(self):
+        request = make_valid_request()
+        request["teachers"][1]["id"] = request["teachers"][0]["id"]
+
+        response = client.post("/api/generate", json=request)
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["detail"]["error"], "validation_error")
+        self.assertEqual(payload["detail"]["details"]["field"], "teachers")
+        self.assertIn(
+            request["teachers"][0]["id"],
+            payload["detail"]["details"]["duplicate_ids"],
+        )
+
+    def test_generate_rejects_missing_auditorium_type(self):
+        request = make_valid_request()
+        request["auditoriums"][0]["type"] = "practice"
+
+        response = client.post("/api/generate", json=request)
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["detail"]["error"], "validation_error")
+        self.assertEqual(payload["detail"]["details"]["field"], "subjects")
+        self.assertEqual(
+            payload["detail"]["details"]["required_auditorium_type"],
+            "lecture",
+        )
+
     def test_generate_rejects_invalid_search_limit(self):
         request = make_valid_request()
         request["max_search_steps"] = 0
@@ -186,6 +214,38 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(payload["error"]["job_id"], job_id)
         finally:
             backend_main.ScheduleGenerator.generate = original_generate
+
+    def test_schedule_contract_reports_limit_reached(self):
+        from backend import main as backend_main
+
+        original_generate = backend_main.ScheduleGenerator.generate
+
+        def fake_generate(self):
+            self.solve_status = "лимит_поиска_достигнут"
+            self.search_steps = 100
+            return None
+
+        backend_main.ScheduleGenerator.generate = fake_generate
+        try:
+            response = client.post("/api/generate", json=make_valid_request())
+            self.assertEqual(response.status_code, 200)
+            job_id = response.json()["job_id"]
+
+            schedule_response = wait_for_job(job_id)
+            self.assertIsNotNone(schedule_response)
+            self.assertEqual(schedule_response.status_code, 200)
+            payload = schedule_response.json()
+            self.assertEqual(payload["status"], "failed")
+            self.assertEqual(
+                payload["error"]["error"], "лимит_поиска_достигнут"
+            )
+            self.assertEqual(payload["error"]["job_id"], job_id)
+        finally:
+            backend_main.ScheduleGenerator.generate = original_generate
+
+    def test_get_schedule_returns_404_for_missing_job(self):
+        response = client.get("/api/schedule/999999")
+        self.assertEqual(response.status_code, 404)
 
 
 if __name__ == "__main__":
