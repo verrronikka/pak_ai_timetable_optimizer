@@ -306,7 +306,12 @@ resultModeSelect.addEventListener("change", () => {
 });
 
 const initialScenario = getCurrentScenario();
-if (initialScenario === "ready" || initialScenario === "empty" || initialScenario === "error") {
+if (
+  initialScenario === "ready" ||
+  initialScenario === "empty" ||
+  initialScenario === "validation" ||
+  initialScenario === "error"
+) {
   resultModeSelect.value = initialScenario;
 }
 

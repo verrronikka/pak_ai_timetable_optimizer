@@ -102,6 +102,23 @@ const ERROR_RESPONSE = {
   error_message: "Сервис генерации временно недоступен. Повторите попытку позже.",
 };
 
+const VALIDATION_JOB = {
+  id: 21,
+  status: "failed",
+  created_at: "2026-04-26T13:00:00Z",
+  completed_at: "2026-04-26T13:00:01Z",
+};
+
+const VALIDATION_RESPONSE = {
+  job_id: 21,
+  status: "failed",
+  schedule: {
+    schedule: {},
+  },
+  error_status: 400,
+  error_message: "validation_error: Список преподавателей не может быть пустым.",
+};
+
 export function getDemoScenario() {
   const params = new URLSearchParams(window.location.search);
   const scenario = params.get("demo");
@@ -136,6 +153,13 @@ export function getDemoPayloadByScenario(scenario) {
     return {
       demoJob: ERROR_JOB,
       demoScheduleResponse: ERROR_RESPONSE,
+    };
+  }
+
+  if (scenario === "validation") {
+    return {
+      demoJob: VALIDATION_JOB,
+      demoScheduleResponse: VALIDATION_RESPONSE,
     };
   }
 
