@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import unittest
 
 from models import Teacher, Group, Auditorium, Subject, LessonTask
 from schedule_generator import ScheduleGenerator
@@ -33,4 +34,5 @@ def run_edge_case_tests():
     print("\nEdge case testing completed.")
 
 if __name__ == "__main__":
-    run_edge_case_tests()
+    # run_edge_case_tests()
+    unittest.main(module="test_edge_cases", exit=False)
