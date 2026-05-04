@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "solver_limits": {
+    "max_search_steps": {
+      "min": 1000,
+      "max": 1000000,
+      "default": 200000,
+      "description": "Максимальное число шагов backtracking"
+    }
+  },
+  "entity_constraints": {
+    "teacher": {
+      "max_weekly_hours": {"min": 1, "max": 40},
+      "available_days": {"type": "array", "items": {"enum": ["Mon","Tue","Wed","Thu","Fri"]}}
+    },
+    "auditorium": {
+      "capacity": {"min": 1, "max": 200},
+      "type": {"enum": ["lecture", "practice", "lab"]}
+    },
+    "group": {
+      "student_count": {"min": 1, "max": 200}
+    },
+    "subject": {
+      "hours_per_week": {"min": 1, "max": 10},
+      "required_auditorium_type": {"enum": ["lecture", "practice", "lab", "any"]}
+    }
+  },
+  "validation_error_codes": {
+    "TEACHER_DAY_UNAVAILABLE": "Преподаватель не доступен в этот день",
+    "AUDITORIUM_DAY_UNAVAILABLE": "Аудитория не доступна в этот день",
+    "AUDITORIUM_CAPACITY_EXCEEDED": "Группа не помещается в аудиторию",
+    "AUDITORIUM_TYPE_MISMATCH": "Тип аудитории не подходит для предмета",
+    "TEACHER_HOURS_LIMIT_REACHED": "Превышен лимит часов преподавателя",
+    "SCHEDULE_CONFLICT": "Конфликт расписания (группа/учитель/аудитория заняты)"
+  }
+}
