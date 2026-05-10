@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic_settings import BaseSettings
 from sqlalchemy import JSON, Column, DateTime, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+DEFAULT_MAX_SEARCH_STEPS = settings.default_max_search_steps
 
 Base = declarative_base()
 engine = create_engine(
@@ -32,7 +33,7 @@ class GenerationJob(Base):
     completed_at = Column(DateTime, nullable=True)
     result = Column(JSON, nullable=True)
     error_message = Column(String, nullable=True)
-    max_search_steps = Column(Integer, default=200000)
+    max_search_steps = Column(Integer, default=DEFAULT_MAX_SEARCH_STEPS)
 
 
 class TeacherInput(BaseModel):
@@ -69,13 +70,75 @@ class ErrorResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     job_id: Optional[int] = None
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "error": "нет_решения",
+                    "message": (
+                        "Не удалось составить расписание при текущих "
+                        "ограничениях."
+                    ),
+                    "details": {
+                        "solve_status": "нет_решения",
+                        "search_steps": 7,
+                        "max_search_steps": 200000,
+                    },
+                    "job_id": 42,
+                }
+            ]
+        }
+    )
+
 
 class ScheduleRequest(BaseModel):
     teachers: List[TeacherInput]
     groups: List[GroupInput]
     auditoriums: List[AuditoriumInput]
     subjects: List[SubjectInput]
-    max_search_steps: Optional[int] = settings.default_max_search_steps
+    max_search_steps: Optional[int] = DEFAULT_MAX_SEARCH_STEPS
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "teachers": [
+                        {
+                            "id": "t1",
+                            "name": "Teacher 1",
+                            "max_hours": 4,
+                            "available_days": ["Mon", "Tue"],
+                        }
+                    ],
+                    "groups": [
+                        {
+                            "id": "g1",
+                            "name": "Group 1",
+                            "student_count": 20,
+                        }
+                    ],
+                    "auditoriums": [
+                        {
+                            "id": "a1",
+                            "capacity": 40,
+                            "type": "lecture",
+                            "available_days": ["Mon", "Tue"],
+                        }
+                    ],
+                    "subjects": [
+                        {
+                            "id": "s1",
+                            "name": "Math",
+                            "hours_per_week": 1,
+                            "required_auditorium_type": "lecture",
+                            "is_lecture": True,
+                        }
+                    ],
+                    "max_search_steps": 100,
+                }
+            ]
+        }
+    )
 
 
 class ScheduleResponse(BaseModel):
@@ -85,3 +148,21 @@ class ScheduleResponse(BaseModel):
     error: Optional[ErrorResponse] = None
     error_message: Optional[str] = None
     message: Optional[str] = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "job_id": 42,
+                    "status": "pending",
+                    "message": (
+                        "Генерация запущена. Используйте GET "
+                        "/api/schedule/{job_id}"
+                    ),
+                    "schedule": None,
+                    "error": None,
+                    "error_message": None,
+                }
+            ]
+        }
+    )
