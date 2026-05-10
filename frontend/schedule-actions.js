@@ -13,6 +13,7 @@ const refreshButton = document.getElementById("refresh-btn");
 const resetButton = document.getElementById("reset-btn");
 const resultModeSelect = document.getElementById("result-mode-select");
 const controlHint = document.getElementById("control-hint");
+const solverConstraintsSummary = document.getElementById("solver-constraints-summary");
 
 const apiClient = createApiClient();
 const POLL_INTERVAL_MS = 1500;
@@ -51,7 +52,7 @@ const DEFAULT_GENERATE_REQUEST = {
       is_lecture: true,
     },
   ],
-  max_search_steps: 50000,
+  max_search_steps: 200000,
 };
 
 const DATA_FILES = {
@@ -59,9 +60,11 @@ const DATA_FILES = {
   groups: "../dev_alg/data/groups.json",
   auditoriums: "../dev_alg/data/auditoriums.json",
   subjects: "../dev_alg/data/subjects.json",
+  constraints: "../backend/solver_contraints.json",
 };
 
 let cachedGenerateRequest = null;
+let cachedSolverConstraints = null;
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -155,19 +158,68 @@ async function loadGenerateRequestFromDataFiles() {
     const [teachers, groups, auditoriums, subjects] = await Promise.all(
       responses.map((response) => response.json()),
     );
+    const solverConstraints = await loadSolverConstraints();
 
     cachedGenerateRequest = {
       teachers,
       groups,
       auditoriums,
       subjects,
-      max_search_steps: DEFAULT_GENERATE_REQUEST.max_search_steps,
+      max_search_steps:
+        solverConstraints?.solver_limits?.max_search_steps?.default ??
+        DEFAULT_GENERATE_REQUEST.max_search_steps,
     };
 
     return cachedGenerateRequest;
   } catch (_error) {
     return DEFAULT_GENERATE_REQUEST;
   }
+}
+
+async function loadSolverConstraints() {
+  if (cachedSolverConstraints) {
+    return cachedSolverConstraints;
+  }
+
+  try {
+    const response = await fetch(DATA_FILES.constraints);
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить solver_contraints.json");
+    }
+
+    cachedSolverConstraints = await response.json();
+    return cachedSolverConstraints;
+  } catch (_error) {
+    cachedSolverConstraints = null;
+    return null;
+  }
+}
+
+function formatSolverConstraintsSummary(constraints) {
+  const defaultSteps = constraints?.solver_limits?.max_search_steps?.default;
+  const minSteps = constraints?.solver_limits?.max_search_steps?.min;
+  const maxSteps = constraints?.solver_limits?.max_search_steps?.max;
+
+  if (!Number.isFinite(defaultSteps) || !Number.isFinite(minSteps) || !Number.isFinite(maxSteps)) {
+    return "Лимиты solver сейчас недоступны. Будет использован встроенный дефолт.";
+  }
+
+  return (
+    `max_search_steps: ${minSteps}..${maxSteps}, ` +
+    `по умолчанию ${defaultSteps}. ` +
+    "Фронтенд подхватывает эти значения из backend/solver_contraints.json."
+  );
+}
+
+async function renderSolverConstraintsSummary() {
+  if (!solverConstraintsSummary) {
+    return;
+  }
+
+  const constraints = await loadSolverConstraints();
+  solverConstraintsSummary.textContent = formatSolverConstraintsSummary(
+    constraints,
+  );
 }
 
 function renderActionState(viewModel) {
@@ -213,6 +265,8 @@ function renderActionState(viewModel) {
 
   controlHint.textContent = "Результат готов. Можно обновить статус или запустить генерацию повторно.";
 }
+
+renderSolverConstraintsSummary();
 
 async function runGenerateFlow() {
   setScenario("loading");

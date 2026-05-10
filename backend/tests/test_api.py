@@ -246,6 +246,12 @@ class ApiTests(unittest.TestCase):
     def test_get_schedule_returns_404_for_missing_job(self):
         response = client.get("/api/schedule/999999")
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Задача не найдена")
+
+    def test_delete_schedule_returns_404_for_missing_job(self):
+        response = client.delete("/api/schedule/999999")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Задача не найдена")
 
 
 if __name__ == "__main__":

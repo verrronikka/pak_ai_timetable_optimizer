@@ -96,6 +96,103 @@ python test.py --output-format both --max-search-steps 300000
 3. Выводит результат в консоль
 4. Сохраняет результат в JSON файл
 
+## Backend API
+
+Основной endpoint для генерации расписания: `POST /api/generate`.
+
+Пример входного payload:
+
+```json
+{
+   "teachers": [
+      {
+         "id": "t1",
+         "name": "Teacher 1",
+         "max_hours": 4,
+         "available_days": ["Mon", "Tue"]
+      }
+   ],
+   "groups": [
+      {
+         "id": "g1",
+         "name": "Group 1",
+         "student_count": 20
+      }
+   ],
+   "auditoriums": [
+      {
+         "id": "a1",
+         "capacity": 40,
+         "type": "lecture",
+         "available_days": ["Mon", "Tue"]
+      }
+   ],
+   "subjects": [
+      {
+         "id": "s1",
+         "name": "Math",
+         "hours_per_week": 1,
+         "required_auditorium_type": "lecture",
+         "is_lecture": true
+      }
+   ],
+   "max_search_steps": 100
+}
+```
+
+Пример ответа после запуска генерации:
+
+```json
+{
+   "job_id": 42,
+   "status": "pending",
+   "message": "Генерация запущена. Используйте GET /api/schedule/{job_id}",
+   "schedule": null,
+   "error": null,
+   "error_message": null
+}
+```
+
+Если решение не найдено, `GET /api/schedule/{job_id}` возвращает,
+например:
+
+```json
+{
+   "job_id": 42,
+   "status": "failed",
+   "schedule": null,
+   "error": {
+      "error": "нет_решения",
+      "message": "Не удалось составить расписание при текущих ограничениях.",
+      "details": {
+         "solve_status": "нет_решения",
+         "search_steps": 7,
+         "max_search_steps": 200000
+      },
+      "job_id": 42
+   },
+   "error_message": "Не удалось составить расписание при текущих ограничениях."
+}
+```
+
+Для валидационных ошибок API возвращает `400` и структурированный `detail` с полем `error = "validation_error"`.
+
+```json
+{
+   "detail": {
+      "error": "validation_error",
+      "message": "Параметр max_search_steps должен быть положительным числом.",
+      "details": {
+         "field": "max_search_steps",
+         "value": 0
+      },
+      "job_id": null
+   }
+}
+```
+
+OpenAPI-схема backend также содержит эти примеры в `backend/db_models.py`, так что `/docs` показывает их автоматически.
+
 ## Валидатор расписания
 
 Валидатор проверяет:
