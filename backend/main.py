@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, List, cast
 
@@ -316,7 +316,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
         job = (
             db.query(GenerationJob).filter(GenerationJob.id == job_id).first()
         )
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.now(UTC)
 
         if result:
             schedule_data = {}
@@ -379,7 +379,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
         )
         job.error_message = error_response.message
         job.result = {"error": error_response.model_dump()}
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.now(UTC)
         db.commit()
 
     finally:
