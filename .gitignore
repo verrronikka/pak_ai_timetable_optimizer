@@ -6,3 +6,5 @@
 .pytest_cache/
 timetable.db
 .env
+
+*_metrics.json

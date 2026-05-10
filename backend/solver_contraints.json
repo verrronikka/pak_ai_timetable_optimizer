@@ -1,5 +1,9 @@
 {
   "version": "1.0",
+  "meta": {
+    "provisional": true,
+    "note": "Ограничения предварительные — основаны на профилировании синтетического набора данных (dev_alg/PROFILING_RESULTS.md). Требуется проверка на реальных данных."
+  },
   "solver_limits": {
     "max_search_steps": {
       "min": 1000,

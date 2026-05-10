@@ -1,0 +1,14 @@
+{
+  "teachers": [
+    {"id": "t1", "name": "Teacher 1", "max_hours": 40, "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]}
+  ],
+  "groups": [
+    {"id": "g1", "name": "Group 1", "student_count": 20}
+  ],
+  "auditoriums": [
+    {"id": "a1", "capacity": 100, "type": "lecture", "available_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]}
+  ],
+  "subjects": [
+    {"id": "s1", "name": "ManyHours", "hours_per_week": 20, "required_auditorium_type": "lecture", "is_lecture": true}
+  ]
+}
