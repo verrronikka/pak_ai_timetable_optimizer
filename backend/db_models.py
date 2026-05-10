@@ -1,11 +1,10 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict
 from pydantic_settings import BaseSettings
 from sqlalchemy import JSON, Column, DateTime, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 
 class Settings(BaseSettings):
@@ -29,7 +28,7 @@ class GenerationJob(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     status = Column(String, default="pending")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     completed_at = Column(DateTime, nullable=True)
     result = Column(JSON, nullable=True)
     error_message = Column(String, nullable=True)
