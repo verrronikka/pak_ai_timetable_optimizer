@@ -24,10 +24,13 @@ function createSkeletonCell(extraClass = "") {
   return td;
 }
 
-function createCell(value, className) {
+function createCell(value, className, title = "") {
   const td = document.createElement("td");
   if (className) {
     td.className = className;
+  }
+  if (title) {
+    td.title = title;
   }
   td.textContent = value;
   return td;
@@ -129,6 +132,43 @@ function updateFiltersSummary(filteredRowsCount, totalRowsCount) {
     `Показано строк: ${filteredRowsCount} из ${totalRowsCount}.`;
 }
 
+function countByCompositeKey(rows, pickKey) {
+  const counts = new Map();
+  rows.forEach((row) => {
+    const key = pickKey(row);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  });
+  return counts;
+}
+
+function getConflictFlags(row, counters) {
+  const teacherConflict =
+    (counters.bySlotTeacher.get(`${row.slot}|${row.teacher}`) ?? 0) > 1;
+  const groupConflict =
+    (counters.bySlotGroup.get(`${row.slot}|${row.group}`) ?? 0) > 1;
+  const auditoriumConflict =
+    (counters.bySlotAuditorium.get(`${row.slot}|${row.auditorium}`) ?? 0) > 1;
+
+  const reasons = [];
+  if (teacherConflict) {
+    reasons.push("Преподаватель занят в этом же слоте");
+  }
+  if (groupConflict) {
+    reasons.push("Группа занята в этом же слоте");
+  }
+  if (auditoriumConflict) {
+    reasons.push("Аудитория занята в этом же слоте");
+  }
+
+  return {
+    teacherConflict,
+    groupConflict,
+    auditoriumConflict,
+    hasConflict: teacherConflict || groupConflict || auditoriumConflict,
+    title: reasons.join("; "),
+  };
+}
+
 function getEmptyMessage(viewModel) {
   if (viewModel.status === UI_STATUS.FAILED) {
     return "Расписание не построено. Причина указана в баннере ошибки.";
@@ -180,21 +220,45 @@ function renderRows(rows, viewModel) {
     return;
   }
 
-  rows.forEach((item) => {
-    const row = document.createElement("tr");
-    row.className = "schedule-row";
+  const counters = {
+    bySlotTeacher: countByCompositeKey(rows, (row) => `${row.slot}|${row.teacher}`),
+    bySlotGroup: countByCompositeKey(rows, (row) => `${row.slot}|${row.group}`),
+    bySlotAuditorium: countByCompositeKey(rows, (row) => `${row.slot}|${row.auditorium}`),
+  };
 
-    row.appendChild(createCell(item.day, "schedule-cell schedule-cell--day"));
-    row.appendChild(createCell(String(item.pair), "schedule-cell schedule-cell--pair"));
+  rows.forEach((item) => {
+    const conflict = getConflictFlags(item, counters);
+    const row = document.createElement("tr");
+    row.className = `schedule-row ${conflict.hasConflict ? "schedule-row--conflict" : ""}`.trim();
+    if (conflict.title) {
+      row.title = conflict.title;
+    }
+
+    row.appendChild(createCell(item.day, "schedule-cell schedule-cell--day", conflict.title));
+    row.appendChild(createCell(String(item.pair), "schedule-cell schedule-cell--pair", conflict.title));
     row.appendChild(
-      createCell(item.auditorium, "schedule-cell schedule-cell--auditorium")
+      createCell(
+        item.auditorium,
+        `schedule-cell schedule-cell--auditorium ${conflict.auditoriumConflict ? "schedule-cell--conflict" : ""}`.trim(),
+        conflict.auditoriumConflict ? "Конфликт аудитории" : "",
+      )
     );
-    row.appendChild(createCell(item.group, "schedule-cell schedule-cell--group"));
     row.appendChild(
-      createCell(item.subject, "schedule-cell schedule-cell--subject")
+      createCell(
+        item.group,
+        `schedule-cell schedule-cell--group ${conflict.groupConflict ? "schedule-cell--conflict" : ""}`.trim(),
+        conflict.groupConflict ? "Конфликт группы" : "",
+      )
     );
     row.appendChild(
-      createCell(item.teacher, "schedule-cell schedule-cell--teacher")
+      createCell(item.subject, "schedule-cell schedule-cell--subject", conflict.title)
+    );
+    row.appendChild(
+      createCell(
+        item.teacher,
+        `schedule-cell schedule-cell--teacher ${conflict.teacherConflict ? "schedule-cell--conflict" : ""}`.trim(),
+        conflict.teacherConflict ? "Конфликт преподавателя" : "",
+      )
     );
 
     tableBody.appendChild(row);

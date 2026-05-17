@@ -276,8 +276,20 @@ p {
   transition: background-color 160ms ease;
 }
 
+.schedule-row--conflict {
+  background: rgba(255, 134, 134, 0.1);
+}
+
 .schedule-cell {
   font-size: 0.96rem;
+}
+
+.schedule-cell--conflict {
+  color: #ffd1d1;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(255, 125, 125, 0.85);
 }
 
 .schedule-cell--day,
