@@ -57,6 +57,65 @@ def make_valid_request():
     }
 
 
+def make_scalable_request(
+    *,
+    teacher_count: int,
+    group_count: int,
+    auditorium_count: int,
+    subject_count: int,
+    max_search_steps: int,
+):
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+
+    teachers = [
+        {
+            "id": f"t{idx}",
+            "name": f"Teacher {idx}",
+            "max_hours": 40,
+            "available_days": days,
+        }
+        for idx in range(1, teacher_count + 1)
+    ]
+
+    groups = [
+        {
+            "id": f"g{idx}",
+            "name": f"Group {idx}",
+            "student_count": 20 + (idx % 10),
+        }
+        for idx in range(1, group_count + 1)
+    ]
+
+    auditoriums = [
+        {
+            "id": f"a{idx}",
+            "capacity": 80,
+            "type": "lecture",
+            "available_days": days,
+        }
+        for idx in range(1, auditorium_count + 1)
+    ]
+
+    subjects = [
+        {
+            "id": f"s{idx}",
+            "name": f"Subject {idx}",
+            "hours_per_week": 1,
+            "required_auditorium_type": "lecture",
+            "is_lecture": True,
+        }
+        for idx in range(1, subject_count + 1)
+    ]
+
+    return {
+        "teachers": teachers,
+        "groups": groups,
+        "auditoriums": auditoriums,
+        "subjects": subjects,
+        "max_search_steps": max_search_steps,
+    }
+
+
 def clear_jobs():
     db = SessionLocal()
     try:
@@ -122,6 +181,44 @@ class ApiTests(unittest.TestCase):
         self.assertIn("execution_time_seconds", metrics_payload["metrics"])
         self.assertIn("search_steps", metrics_payload["metrics"])
         self.assertIn("memory_peak_mb", metrics_payload["metrics"])
+
+    def test_e2e_small_dataset_generation_flow(self):
+        payload = make_scalable_request(
+            teacher_count=3,
+            group_count=3,
+            auditorium_count=3,
+            subject_count=2,
+            max_search_steps=3000,
+        )
+        response = client.post("/api/generate", json=payload)
+        self.assertEqual(response.status_code, 200)
+        job_id = response.json()["job_id"]
+
+        schedule_response = wait_for_job(job_id, timeout_seconds=10.0)
+        self.assertIsNotNone(schedule_response)
+        self.assertEqual(schedule_response.status_code, 200)
+        result = schedule_response.json()
+        self.assertEqual(result["status"], "completed")
+        self.assertIsNotNone(result["schedule"])
+
+    def test_e2e_larger_dataset_generation_flow(self):
+        payload = make_scalable_request(
+            teacher_count=8,
+            group_count=8,
+            auditorium_count=8,
+            subject_count=2,
+            max_search_steps=20000,
+        )
+        response = client.post("/api/generate", json=payload)
+        self.assertEqual(response.status_code, 200)
+        job_id = response.json()["job_id"]
+
+        schedule_response = wait_for_job(job_id, timeout_seconds=20.0)
+        self.assertIsNotNone(schedule_response)
+        self.assertEqual(schedule_response.status_code, 200)
+        result = schedule_response.json()
+        self.assertEqual(result["status"], "completed")
+        self.assertIsNotNone(result["schedule"])
 
     def test_generate_rejects_empty_teachers(self):
         request = make_valid_request()
