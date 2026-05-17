@@ -1,0 +1,13 @@
+{
+  "job_id": 1,
+  "threshold_seconds": 5.0,
+  "elapsed_seconds": 0.240785,
+  "status": "completed",
+  "metrics": {
+    "execution_time_seconds": 0.15639,
+    "search_steps": 13,
+    "memory_peak_mb": 0.023,
+    "max_search_steps": 20000
+  },
+  "generated_at_utc": "2026-05-17T12:56:48Z"
+}
