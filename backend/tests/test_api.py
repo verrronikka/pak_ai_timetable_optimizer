@@ -103,6 +103,26 @@ class ApiTests(unittest.TestCase):
         self.assertIsNotNone(schedule_payload["schedule"])
         self.assertIsNone(schedule_payload.get("error"))
 
+    def test_get_metrics_returns_generation_metrics(self):
+        response = client.post("/api/generate", json=make_valid_request())
+        self.assertEqual(response.status_code, 200)
+        job_id = response.json()["job_id"]
+
+        schedule_response = wait_for_job(job_id)
+        self.assertIsNotNone(schedule_response)
+        self.assertEqual(schedule_response.status_code, 200)
+
+        metrics_response = client.get(f"/api/metrics/{job_id}")
+        self.assertEqual(metrics_response.status_code, 200)
+        metrics_payload = metrics_response.json()
+
+        self.assertEqual(metrics_payload["job_id"], job_id)
+        self.assertTrue(metrics_payload["has_metrics"])
+        self.assertIn("metrics", metrics_payload)
+        self.assertIn("execution_time_seconds", metrics_payload["metrics"])
+        self.assertIn("search_steps", metrics_payload["metrics"])
+        self.assertIn("memory_peak_mb", metrics_payload["metrics"])
+
     def test_generate_rejects_empty_teachers(self):
         request = make_valid_request()
         request["teachers"] = []
