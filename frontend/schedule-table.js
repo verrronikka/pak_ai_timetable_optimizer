@@ -9,6 +9,7 @@ const groupFilter = document.getElementById("filter-group");
 const auditoriumFilter = document.getElementById("filter-auditorium");
 const filtersResetButton = document.getElementById("filters-reset-btn");
 const filtersSummary = document.getElementById("filters-summary");
+const renderTimeValue = document.getElementById("render-time-value");
 
 const filtersState = {
   teacher: "",
@@ -171,6 +172,13 @@ function getConflictFlags(row, counters) {
   };
 }
 
+function updateRenderMetric(value) {
+  if (!renderTimeValue) {
+    return;
+  }
+  renderTimeValue.textContent = value;
+}
+
 function getEmptyMessage(viewModel) {
   if (viewModel.status === UI_STATUS.FAILED) {
     return "Расписание не построено. Причина указана в баннере ошибки.";
@@ -252,15 +260,16 @@ function buildScheduleRowElement(item, counters) {
   return row;
 }
 
-function renderRowsSync(rows, counters) {
+function renderRowsSync(rows, counters, onComplete) {
   const fragment = document.createDocumentFragment();
   rows.forEach((item) => {
     fragment.appendChild(buildScheduleRowElement(item, counters));
   });
   tableBody.appendChild(fragment);
+  onComplete();
 }
 
-function renderRowsLazy(rows, counters, renderToken) {
+function renderRowsLazy(rows, counters, renderToken, onComplete) {
   let startIndex = 0;
 
   const appendNextBatch = () => {
@@ -280,17 +289,21 @@ function renderRowsLazy(rows, counters, renderToken) {
 
     if (startIndex < rows.length) {
       window.requestAnimationFrame(appendNextBatch);
+      return;
     }
+
+    onComplete();
   };
 
   window.requestAnimationFrame(appendNextBatch);
 }
 
-function renderRows(rows, viewModel, renderToken) {
+function renderRows(rows, viewModel, renderToken, onComplete) {
   tableBody.innerHTML = "";
 
   if (!rows.length) {
     renderEmptyMessage(viewModel);
+    onComplete();
     return;
   }
 
@@ -301,11 +314,11 @@ function renderRows(rows, viewModel, renderToken) {
   };
 
   if (rows.length <= RENDER_BATCH_SIZE * 2) {
-    renderRowsSync(rows, counters);
+    renderRowsSync(rows, counters, onComplete);
     return;
   }
 
-  renderRowsLazy(rows, counters, renderToken);
+  renderRowsLazy(rows, counters, renderToken, onComplete);
 }
 
 function toggleEmptyPanel(isVisible) {
@@ -329,6 +342,7 @@ function renderTableByState(viewModel) {
     renderLoadingRows();
     updateFilterOptions([]);
     updateFiltersSummary(0, 0);
+    updateRenderMetric("Время рендера: ожидание данных...");
     toggleEmptyPanel(false);
     return;
   }
@@ -336,7 +350,15 @@ function renderTableByState(viewModel) {
   updateFilterOptions(viewModel.rows);
   const filteredRows = applyFilters(viewModel.rows);
   updateFiltersSummary(filteredRows.length, viewModel.rows.length);
-  renderRows(filteredRows, viewModel, currentRenderToken);
+
+  const startedAt = performance.now();
+  renderRows(filteredRows, viewModel, currentRenderToken, () => {
+    const elapsedMs = performance.now() - startedAt;
+    updateRenderMetric(
+      `Время рендера: ${elapsedMs.toFixed(2)} мс (${filteredRows.length} строк).`,
+    );
+  });
+
   toggleEmptyPanel(filteredRows.length === 0);
 }
 
