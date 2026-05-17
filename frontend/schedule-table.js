@@ -4,6 +4,17 @@ import { getCurrentViewModel, subscribeViewModel } from "./schedule-state.js";
 const tableBody = document.getElementById("schedule-table-body");
 const table = document.querySelector(".schedule-table");
 const emptyStatePanel = document.querySelector(".empty-state");
+const teacherFilter = document.getElementById("filter-teacher");
+const groupFilter = document.getElementById("filter-group");
+const auditoriumFilter = document.getElementById("filter-auditorium");
+const filtersResetButton = document.getElementById("filters-reset-btn");
+const filtersSummary = document.getElementById("filters-summary");
+
+const filtersState = {
+  teacher: "",
+  group: "",
+  auditorium: "",
+};
 
 function createSkeletonCell(extraClass = "") {
   const td = document.createElement("td");
@@ -20,6 +31,102 @@ function createCell(value, className) {
   }
   td.textContent = value;
   return td;
+}
+
+function toOptionValues(rows, key) {
+  return [...new Set(rows.map((row) => String(row[key] ?? "")).filter(Boolean))].sort(
+    (left, right) => left.localeCompare(right, "ru"),
+  );
+}
+
+function repopulateSelect(selectElement, values, allLabel, selectedValue) {
+  if (!selectElement) {
+    return;
+  }
+
+  const previousValue = selectedValue ?? "";
+  selectElement.innerHTML = "";
+
+  const allOption = document.createElement("option");
+  allOption.value = "";
+  allOption.textContent = allLabel;
+  selectElement.appendChild(allOption);
+
+  values.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    selectElement.appendChild(option);
+  });
+
+  const canRestoreSelection = previousValue && values.includes(previousValue);
+  selectElement.value = canRestoreSelection ? previousValue : "";
+}
+
+function updateFilterOptions(rows) {
+  repopulateSelect(
+    teacherFilter,
+    toOptionValues(rows, "teacher"),
+    "Все преподаватели",
+    filtersState.teacher,
+  );
+  repopulateSelect(
+    groupFilter,
+    toOptionValues(rows, "group"),
+    "Все группы",
+    filtersState.group,
+  );
+  repopulateSelect(
+    auditoriumFilter,
+    toOptionValues(rows, "auditorium"),
+    "Все аудитории",
+    filtersState.auditorium,
+  );
+
+  filtersState.teacher = teacherFilter?.value ?? "";
+  filtersState.group = groupFilter?.value ?? "";
+  filtersState.auditorium = auditoriumFilter?.value ?? "";
+}
+
+function applyFilters(rows) {
+  return rows.filter((row) => {
+    if (filtersState.teacher && row.teacher !== filtersState.teacher) {
+      return false;
+    }
+    if (filtersState.group && row.group !== filtersState.group) {
+      return false;
+    }
+    if (filtersState.auditorium && row.auditorium !== filtersState.auditorium) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function updateFiltersSummary(filteredRowsCount, totalRowsCount) {
+  if (!filtersSummary) {
+    return;
+  }
+
+  const activeFilters = [];
+  if (filtersState.teacher) {
+    activeFilters.push(`преподаватель: ${filtersState.teacher}`);
+  }
+  if (filtersState.group) {
+    activeFilters.push(`группа: ${filtersState.group}`);
+  }
+  if (filtersState.auditorium) {
+    activeFilters.push(`аудитория: ${filtersState.auditorium}`);
+  }
+
+  if (!activeFilters.length) {
+    filtersSummary.textContent = `Фильтры не применены. Показано строк: ${totalRowsCount}.`;
+    return;
+  }
+
+  filtersSummary.textContent =
+    `Активные фильтры: ${activeFilters.join(", ")}. ` +
+    `Показано строк: ${filteredRowsCount} из ${totalRowsCount}.`;
 }
 
 function getEmptyMessage(viewModel) {
@@ -110,13 +217,48 @@ function renderTableByState(viewModel) {
 
   if (isLoading) {
     renderLoadingRows();
+    updateFilterOptions([]);
+    updateFiltersSummary(0, 0);
     toggleEmptyPanel(false);
     return;
   }
 
-  renderRows(viewModel.rows, viewModel);
-  toggleEmptyPanel(viewModel.rows.length === 0);
+  updateFilterOptions(viewModel.rows);
+  const filteredRows = applyFilters(viewModel.rows);
+  updateFiltersSummary(filteredRows.length, viewModel.rows.length);
+  renderRows(filteredRows, viewModel);
+  toggleEmptyPanel(filteredRows.length === 0);
 }
+
+function handleFiltersChange() {
+  filtersState.teacher = teacherFilter?.value ?? "";
+  filtersState.group = groupFilter?.value ?? "";
+  filtersState.auditorium = auditoriumFilter?.value ?? "";
+  renderTableByState(getCurrentViewModel());
+}
+
+function resetFilters() {
+  filtersState.teacher = "";
+  filtersState.group = "";
+  filtersState.auditorium = "";
+
+  if (teacherFilter) {
+    teacherFilter.value = "";
+  }
+  if (groupFilter) {
+    groupFilter.value = "";
+  }
+  if (auditoriumFilter) {
+    auditoriumFilter.value = "";
+  }
+
+  renderTableByState(getCurrentViewModel());
+}
+
+teacherFilter?.addEventListener("change", handleFiltersChange);
+groupFilter?.addEventListener("change", handleFiltersChange);
+auditoriumFilter?.addEventListener("change", handleFiltersChange);
+filtersResetButton?.addEventListener("click", resetFilters);
 
 renderTableByState(getCurrentViewModel());
 subscribeViewModel(renderTableByState);

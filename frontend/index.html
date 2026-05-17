@@ -54,6 +54,31 @@
             </div>
           </div>
 
+          <div class="schedule-filters" aria-label="Фильтры расписания">
+            <label class="control-label" for="filter-teacher">Преподаватель</label>
+            <select id="filter-teacher" class="control-select">
+              <option value="">Все преподаватели</option>
+            </select>
+
+            <label class="control-label" for="filter-group">Группа</label>
+            <select id="filter-group" class="control-select">
+              <option value="">Все группы</option>
+            </select>
+
+            <label class="control-label" for="filter-auditorium">Аудитория</label>
+            <select id="filter-auditorium" class="control-select">
+              <option value="">Все аудитории</option>
+            </select>
+
+            <button id="filters-reset-btn" class="control-btn" type="button">
+              Сбросить фильтры
+            </button>
+
+            <p class="filters-summary" id="filters-summary" aria-live="polite">
+              Фильтры не применены.
+            </p>
+          </div>
+
           <div class="table-wrap">
             <table class="schedule-table" aria-label="Таблица расписания">
               <thead>
