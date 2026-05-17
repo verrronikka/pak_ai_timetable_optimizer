@@ -15,6 +15,8 @@ const filtersState = {
   group: "",
   auditorium: "",
 };
+const RENDER_BATCH_SIZE = 120;
+let activeRenderToken = 0;
 
 function createSkeletonCell(extraClass = "") {
   const td = document.createElement("td");
@@ -212,7 +214,79 @@ function renderLoadingRows() {
   }
 }
 
-function renderRows(rows, viewModel) {
+function buildScheduleRowElement(item, counters) {
+  const conflict = getConflictFlags(item, counters);
+  const row = document.createElement("tr");
+  row.className = `schedule-row ${conflict.hasConflict ? "schedule-row--conflict" : ""}`.trim();
+  if (conflict.title) {
+    row.title = conflict.title;
+  }
+
+  row.appendChild(createCell(item.day, "schedule-cell schedule-cell--day", conflict.title));
+  row.appendChild(createCell(String(item.pair), "schedule-cell schedule-cell--pair", conflict.title));
+  row.appendChild(
+    createCell(
+      item.auditorium,
+      `schedule-cell schedule-cell--auditorium ${conflict.auditoriumConflict ? "schedule-cell--conflict" : ""}`.trim(),
+      conflict.auditoriumConflict ? "Конфликт аудитории" : "",
+    )
+  );
+  row.appendChild(
+    createCell(
+      item.group,
+      `schedule-cell schedule-cell--group ${conflict.groupConflict ? "schedule-cell--conflict" : ""}`.trim(),
+      conflict.groupConflict ? "Конфликт группы" : "",
+    )
+  );
+  row.appendChild(
+    createCell(item.subject, "schedule-cell schedule-cell--subject", conflict.title)
+  );
+  row.appendChild(
+    createCell(
+      item.teacher,
+      `schedule-cell schedule-cell--teacher ${conflict.teacherConflict ? "schedule-cell--conflict" : ""}`.trim(),
+      conflict.teacherConflict ? "Конфликт преподавателя" : "",
+    )
+  );
+
+  return row;
+}
+
+function renderRowsSync(rows, counters) {
+  const fragment = document.createDocumentFragment();
+  rows.forEach((item) => {
+    fragment.appendChild(buildScheduleRowElement(item, counters));
+  });
+  tableBody.appendChild(fragment);
+}
+
+function renderRowsLazy(rows, counters, renderToken) {
+  let startIndex = 0;
+
+  const appendNextBatch = () => {
+    if (renderToken !== activeRenderToken) {
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    const endIndex = Math.min(startIndex + RENDER_BATCH_SIZE, rows.length);
+
+    for (let index = startIndex; index < endIndex; index += 1) {
+      fragment.appendChild(buildScheduleRowElement(rows[index], counters));
+    }
+
+    tableBody.appendChild(fragment);
+    startIndex = endIndex;
+
+    if (startIndex < rows.length) {
+      window.requestAnimationFrame(appendNextBatch);
+    }
+  };
+
+  window.requestAnimationFrame(appendNextBatch);
+}
+
+function renderRows(rows, viewModel, renderToken) {
   tableBody.innerHTML = "";
 
   if (!rows.length) {
@@ -226,43 +300,12 @@ function renderRows(rows, viewModel) {
     bySlotAuditorium: countByCompositeKey(rows, (row) => `${row.slot}|${row.auditorium}`),
   };
 
-  rows.forEach((item) => {
-    const conflict = getConflictFlags(item, counters);
-    const row = document.createElement("tr");
-    row.className = `schedule-row ${conflict.hasConflict ? "schedule-row--conflict" : ""}`.trim();
-    if (conflict.title) {
-      row.title = conflict.title;
-    }
+  if (rows.length <= RENDER_BATCH_SIZE * 2) {
+    renderRowsSync(rows, counters);
+    return;
+  }
 
-    row.appendChild(createCell(item.day, "schedule-cell schedule-cell--day", conflict.title));
-    row.appendChild(createCell(String(item.pair), "schedule-cell schedule-cell--pair", conflict.title));
-    row.appendChild(
-      createCell(
-        item.auditorium,
-        `schedule-cell schedule-cell--auditorium ${conflict.auditoriumConflict ? "schedule-cell--conflict" : ""}`.trim(),
-        conflict.auditoriumConflict ? "Конфликт аудитории" : "",
-      )
-    );
-    row.appendChild(
-      createCell(
-        item.group,
-        `schedule-cell schedule-cell--group ${conflict.groupConflict ? "schedule-cell--conflict" : ""}`.trim(),
-        conflict.groupConflict ? "Конфликт группы" : "",
-      )
-    );
-    row.appendChild(
-      createCell(item.subject, "schedule-cell schedule-cell--subject", conflict.title)
-    );
-    row.appendChild(
-      createCell(
-        item.teacher,
-        `schedule-cell schedule-cell--teacher ${conflict.teacherConflict ? "schedule-cell--conflict" : ""}`.trim(),
-        conflict.teacherConflict ? "Конфликт преподавателя" : "",
-      )
-    );
-
-    tableBody.appendChild(row);
-  });
+  renderRowsLazy(rows, counters, renderToken);
 }
 
 function toggleEmptyPanel(isVisible) {
@@ -273,6 +316,9 @@ function toggleEmptyPanel(isVisible) {
 }
 
 function renderTableByState(viewModel) {
+  activeRenderToken += 1;
+  const currentRenderToken = activeRenderToken;
+
   const isLoading =
     viewModel.status === UI_STATUS.PENDING ||
     viewModel.status === UI_STATUS.RUNNING;
@@ -290,7 +336,7 @@ function renderTableByState(viewModel) {
   updateFilterOptions(viewModel.rows);
   const filteredRows = applyFilters(viewModel.rows);
   updateFiltersSummary(filteredRows.length, viewModel.rows.length);
-  renderRows(filteredRows, viewModel);
+  renderRows(filteredRows, viewModel, currentRenderToken);
   toggleEmptyPanel(filteredRows.length === 0);
 }
 
