@@ -10,3 +10,7 @@ timetable.db
 *_metrics.json
 dev_alg/artifacts/*
 !dev_alg/artifacts/.gitkeep
+
+frontend/node_modules/
+frontend/playwright-report/
+frontend/test-results/

@@ -1,4 +1,6 @@
 import sys
+import time
+import tracemalloc
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, List, cast
@@ -269,6 +271,8 @@ def generate_time_slots():
 
 def run_generation(job_id: int, request: ScheduleRequest):
     db = SessionLocal()
+    started_at = time.perf_counter()
+    tracemalloc.start()
 
     try:
         job = cast(
@@ -312,6 +316,16 @@ def run_generation(job_id: int, request: ScheduleRequest):
         )
 
         result = generator.generate()
+        elapsed_seconds = time.perf_counter() - started_at
+        _, memory_peak_bytes = tracemalloc.get_traced_memory()
+        memory_peak_mb = round(memory_peak_bytes / (1024 * 1024), 3)
+
+        run_metrics = {
+            "execution_time_seconds": round(elapsed_seconds, 6),
+            "search_steps": generator.search_steps,
+            "memory_peak_mb": memory_peak_mb,
+            "max_search_steps": request.max_search_steps,
+        }
 
         job = (
             db.query(GenerationJob).filter(GenerationJob.id == job_id).first()
@@ -337,6 +351,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
                 "schedule": schedule_data,
                 "solve_status": generator.solve_status,
                 "search_steps": generator.search_steps,
+                "metrics": run_metrics,
             }
         else:
             job.status = "failed"
@@ -357,6 +372,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
                 "error": error_response.model_dump(),
                 "solve_status": generator.solve_status,
                 "search_steps": generator.search_steps,
+                "metrics": run_metrics,
             }
 
         db.commit()
@@ -383,6 +399,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
         db.commit()
 
     finally:
+        tracemalloc.stop()
         db.close()
 
 
@@ -455,6 +472,32 @@ async def get_schedule(job_id: int):
             else None,
             error_message=job.error_message,
         )
+    finally:
+        db.close()
+
+
+@app.get("/api/metrics/{job_id}")
+async def get_job_metrics(job_id: int):
+    db = SessionLocal()
+
+    try:
+        job = cast(
+            Any,
+            db.query(GenerationJob).filter(GenerationJob.id == job_id).first(),
+        )
+
+        if not job:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+
+        result_payload = job.result if isinstance(job.result, dict) else {}
+        metrics = result_payload.get("metrics")
+
+        return {
+            "job_id": job.id,
+            "status": job.status,
+            "metrics": metrics,
+            "has_metrics": isinstance(metrics, dict),
+        }
     finally:
         db.close()
 

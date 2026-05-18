@@ -191,6 +191,28 @@ python test.py --output-format both --max-search-steps 300000
 }
 ```
 
+Для мониторинга выполнения добавлен endpoint `GET /api/metrics/{job_id}`.
+Он возвращает текущий статус задачи и runtime-метрики генерации.
+
+Пример ответа:
+
+```json
+{
+   "job_id": 42,
+   "status": "completed",
+   "metrics": {
+      "execution_time_seconds": 0.021347,
+      "search_steps": 5,
+      "memory_peak_mb": 0.041,
+      "max_search_steps": 200000
+   },
+   "has_metrics": true
+}
+```
+
+Если задача еще не завершена, поле `metrics` может быть `null`,
+а `has_metrics` будет `false`.
+
 OpenAPI-схема backend также содержит эти примеры в `backend/db_models.py`, так что `/docs` показывает их автоматически.
 
 ## Валидатор расписания
