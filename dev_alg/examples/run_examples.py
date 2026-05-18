@@ -1,8 +1,9 @@
 import json
-import sys
-from pathlib import Path
+from paths import ROOT, bootstrap
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+bootstrap()
+
+EXAMPLES_DIR = ROOT / "examples"
 
 from models import Auditorium, Group, LessonTask, Subject, Teacher
 from schedule_generator import ScheduleGenerator
@@ -66,9 +67,7 @@ def build_objects(data):
 
 
 if __name__ == "__main__":
-    base = Path(__file__).resolve().parent
-
-    data_ns = load_input(base / "no_solution_input.json")
+    data_ns = load_input(EXAMPLES_DIR / "no_solution_input.json")
     tasks_ns, auds_ns, slots_ns = build_objects(data_ns)
     solver_ns = ScheduleGenerator(
         tasks=tasks_ns,
@@ -82,7 +81,7 @@ if __name__ == "__main__":
     print("Search steps:", solver_ns.search_steps)
     print("Result is None?:", res_ns is None)
 
-    data_lr = load_input(base / "limit_reached_input.json")
+    data_lr = load_input(EXAMPLES_DIR / "limit_reached_input.json")
     tasks_lr, auds_lr, slots_lr = build_objects(data_lr)
     solver_lr = ScheduleGenerator(
         tasks=tasks_lr,
