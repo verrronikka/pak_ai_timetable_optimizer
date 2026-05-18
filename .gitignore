@@ -8,3 +8,7 @@ timetable.db
 .env
 
 *_metrics.json
+
+frontend/node_modules/
+frontend/playwright-report/
+frontend/test-results/
