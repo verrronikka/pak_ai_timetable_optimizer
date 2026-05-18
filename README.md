@@ -67,10 +67,10 @@ git pull, но установка хука выполняется вручную
   ...
 ```
 
-1. Сохраняет его в файл `reports/generated/schedule_output.json`.
+1. Сохраняет его в файл `dev_alg/artifacts/schedule_output.json`.
 
-1. Формирует читаемый отчет
-   `reports/generated/schedule_report.md` в виде таблицы.
+1. Формирует читаемый отчёт
+   `dev_alg/artifacts/schedule_report.md` в виде таблицы.
 
 Каждая запись содержит: временной слот, аудиторию, группу,
 дисциплину и преподавателя.

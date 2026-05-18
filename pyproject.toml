@@ -3,6 +3,7 @@ line-length = 79
 target-version = "py312"
 extend-exclude = [
   "reports",
+  "dev_alg/artifacts",
 ]
 
 [tool.ruff.lint]

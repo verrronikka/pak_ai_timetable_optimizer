@@ -8,3 +8,5 @@ timetable.db
 .env
 
 *_metrics.json
+dev_alg/artifacts/*
+!dev_alg/artifacts/.gitkeep
