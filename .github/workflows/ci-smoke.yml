@@ -108,7 +108,7 @@ jobs:
                   if asset.endswith("solver_contraints.json"):
                       constraints = json.loads(payload)
                       assert constraints["solver_limits"]["max_search_steps"]["default"] == 200000
-                      assert constraints["meta"]["provisional"] is True
+                      assert constraints["meta"]["provisional"] is False
           PY
 
       - name: Stop static server
