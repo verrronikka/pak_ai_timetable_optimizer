@@ -1,12 +1,12 @@
 {
   "version": "1.0",
   "meta": {
-    "provisional": true,
-    "note": "Ограничения предварительные — основаны на профилировании синтетического набора данных (dev_alg/PROFILING_RESULTS.md). Требуется проверка на реальных данных."
+    "provisional": false,
+    "note": "Лимиты уточнены по бенчмаркам dev_alg/data/benchmarks (18.05.2026). Отчёт: docs/solver-performance.md."
   },
   "solver_limits": {
     "max_search_steps": {
-      "min": 1000,
+      "min": 5000,
       "max": 1000000,
       "default": 200000,
       "description": "Максимальное число шагов backtracking"
