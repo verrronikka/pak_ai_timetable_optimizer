@@ -1,0 +1,62 @@
+[
+  {
+    "id": "g1",
+    "name": "Group 1",
+    "student_count": 21
+  },
+  {
+    "id": "g2",
+    "name": "Group 2",
+    "student_count": 20
+  },
+  {
+    "id": "g3",
+    "name": "Group 3",
+    "student_count": 24
+  },
+  {
+    "id": "g4",
+    "name": "Group 4",
+    "student_count": 23
+  },
+  {
+    "id": "g5",
+    "name": "Group 5",
+    "student_count": 23
+  },
+  {
+    "id": "g6",
+    "name": "Group 6",
+    "student_count": 22
+  },
+  {
+    "id": "g7",
+    "name": "Group 7",
+    "student_count": 21
+  },
+  {
+    "id": "g8",
+    "name": "Group 8",
+    "student_count": 28
+  },
+  {
+    "id": "g9",
+    "name": "Group 9",
+    "student_count": 21
+  },
+  {
+    "id": "g10",
+    "name": "Group 10",
+    "student_count": 26
+  },
+  {
+    "id": "g11",
+    "name": "Group 11",
+    "student_count": 20
+  },
+  {
+    "id": "g12",
+    "name": "Group 12",
+    "student_count": 20
+  }
+]

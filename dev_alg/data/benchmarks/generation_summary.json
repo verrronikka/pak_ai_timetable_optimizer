@@ -1,0 +1,54 @@
+[
+  {
+    "tier": "tiny",
+    "seed": 42,
+    "teachers": 2,
+    "groups": 2,
+    "teachers_x_groups": 4,
+    "task_count": 8,
+    "time_slot_count": 20,
+    "pairs_per_day": 4,
+    "verified": true,
+    "verify_search_steps": 9,
+    "verify_status": "успех"
+  },
+  {
+    "tier": "small",
+    "seed": 42,
+    "teachers": 4,
+    "groups": 4,
+    "teachers_x_groups": 16,
+    "task_count": 24,
+    "time_slot_count": 20,
+    "pairs_per_day": 4,
+    "verified": true,
+    "verify_search_steps": 25,
+    "verify_status": "успех"
+  },
+  {
+    "tier": "medium",
+    "seed": 42,
+    "teachers": 8,
+    "groups": 8,
+    "teachers_x_groups": 64,
+    "task_count": 64,
+    "time_slot_count": 25,
+    "pairs_per_day": 5,
+    "verified": true,
+    "verify_search_steps": 65,
+    "verify_status": "успех"
+  },
+  {
+    "tier": "large",
+    "seed": 42,
+    "teachers": 12,
+    "groups": 12,
+    "teachers_x_groups": 144,
+    "task_count": 96,
+    "time_slot_count": 30,
+    "pairs_per_day": 6,
+    "verified": true,
+    "verify_search_steps": 97,
+    "verify_status": "успех"
+  }
+]

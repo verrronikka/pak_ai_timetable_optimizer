@@ -1,0 +1,110 @@
+[
+  {
+    "id": "a1",
+    "capacity": 60,
+    "type": "lecture",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a2",
+    "capacity": 60,
+    "type": "lecture",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a3",
+    "capacity": 60,
+    "type": "lecture",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a4",
+    "capacity": 60,
+    "type": "practice",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a5",
+    "capacity": 60,
+    "type": "practice",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a6",
+    "capacity": 60,
+    "type": "practice",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a7",
+    "capacity": 60,
+    "type": "lab",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a8",
+    "capacity": 60,
+    "type": "lab",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "a9",
+    "capacity": 60,
+    "type": "lab",
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  }
+]

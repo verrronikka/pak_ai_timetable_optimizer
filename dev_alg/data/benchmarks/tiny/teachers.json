@@ -1,0 +1,26 @@
+[
+  {
+    "id": "t1",
+    "name": "Teacher 1",
+    "max_hours": 40,
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  {
+    "id": "t2",
+    "name": "Teacher 2",
+    "max_hours": 40,
+    "available_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  }
+]

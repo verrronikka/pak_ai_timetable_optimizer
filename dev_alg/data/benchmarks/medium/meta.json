@@ -1,0 +1,10 @@
+{
+  "tier": "medium",
+  "seed": 42,
+  "teachers": 8,
+  "groups": 8,
+  "teachers_x_groups": 64,
+  "task_count": 64,
+  "time_slot_count": 25,
+  "pairs_per_day": 5
+}

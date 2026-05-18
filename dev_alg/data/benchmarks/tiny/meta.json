@@ -1,0 +1,10 @@
+{
+  "tier": "tiny",
+  "seed": 42,
+  "teachers": 2,
+  "groups": 2,
+  "teachers_x_groups": 4,
+  "task_count": 8,
+  "time_slot_count": 20,
+  "pairs_per_day": 4
+}

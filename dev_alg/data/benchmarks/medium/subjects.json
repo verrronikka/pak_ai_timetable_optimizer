@@ -1,0 +1,30 @@
+[
+  {
+    "id": "s1",
+    "name": "Mathematics",
+    "hours_per_week": 2,
+    "required_auditorium_type": "lecture",
+    "is_lecture": true
+  },
+  {
+    "id": "s2",
+    "name": "Algorithms",
+    "hours_per_week": 2,
+    "required_auditorium_type": "practice",
+    "is_lecture": false
+  },
+  {
+    "id": "s3",
+    "name": "Databases",
+    "hours_per_week": 2,
+    "required_auditorium_type": "practice",
+    "is_lecture": false
+  },
+  {
+    "id": "s4",
+    "name": "English",
+    "hours_per_week": 2,
+    "required_auditorium_type": "lecture",
+    "is_lecture": true
+  }
+]
