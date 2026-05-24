@@ -78,6 +78,34 @@ jobs:
         run: |
           python -m pytest backend/tests/test_performance_regression.py -q
 
+      - name: Check performance regression threshold
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report_path = Path("reports/generated/performance_regression_latest.json")
+          if not report_path.exists():
+              raise SystemExit(f"Performance report not found: {report_path}")
+
+          payload = json.loads(report_path.read_text(encoding="utf-8"))
+          elapsed = float(payload.get("elapsed_seconds", 0.0))
+          threshold = float(payload.get("threshold_seconds", 0.0))
+
+          if elapsed >= threshold:
+              print(
+                  f"::error title=Performance regression detected::"
+                  f"elapsed={elapsed:.3f}s threshold={threshold:.3f}s"
+              )
+              raise SystemExit(1)
+
+          print(
+              f"Performance regression check passed: "
+              f"elapsed={elapsed:.3f}s threshold={threshold:.3f}s"
+          )
+          PY
+
       - name: Upload performance report artifact
         if: always()
         uses: actions/upload-artifact@v4
