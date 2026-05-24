@@ -1,9 +1,5 @@
-import sys
 import time
 import unittest
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from fastapi.testclient import TestClient
 
@@ -125,6 +121,24 @@ def clear_jobs():
         db.close()
 
 
+def create_pending_job(request_payload: dict, *, attempts: int = 0):
+    db = SessionLocal()
+    try:
+        job = GenerationJob(
+            status="pending",
+            request_payload=request_payload,
+            attempts=attempts,
+            max_attempts=2,
+            timeout_seconds=15,
+        )
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        return job.id
+    finally:
+        db.close()
+
+
 def wait_for_job(job_id: int, timeout_seconds: float = 5.0):
     deadline = time.time() + timeout_seconds
     response = None
@@ -181,6 +195,77 @@ class ApiTests(unittest.TestCase):
         self.assertIn("execution_time_seconds", metrics_payload["metrics"])
         self.assertIn("search_steps", metrics_payload["metrics"])
         self.assertIn("memory_peak_mb", metrics_payload["metrics"])
+
+    def test_recover_pending_job_after_restart(self):
+        from backend import main as backend_main
+
+        job_id = create_pending_job(make_valid_request())
+
+        backend_main.recover_pending_jobs()
+
+        schedule_response = wait_for_job(job_id, timeout_seconds=10.0)
+        self.assertIsNotNone(schedule_response)
+        self.assertEqual(schedule_response.status_code, 200)
+        payload = schedule_response.json()
+        self.assertEqual(payload["status"], "completed")
+        self.assertIsNotNone(payload["schedule"])
+
+    def test_transient_server_error_is_retried(self):
+        from backend import main as backend_main
+
+        original_generate = backend_main.ScheduleGenerator.generate
+        call_state = {"count": 0}
+
+        def flaky_generate(self):
+            call_state["count"] += 1
+            if call_state["count"] == 1:
+                raise RuntimeError("temporary failure")
+            return original_generate(self)
+
+        backend_main.ScheduleGenerator.generate = flaky_generate
+        try:
+            response = client.post("/api/generate", json=make_valid_request())
+            self.assertEqual(response.status_code, 200)
+            job_id = response.json()["job_id"]
+
+            schedule_response = wait_for_job(job_id, timeout_seconds=15.0)
+            self.assertIsNotNone(schedule_response)
+            self.assertEqual(schedule_response.status_code, 200)
+            payload = schedule_response.json()
+            self.assertEqual(payload["status"], "completed")
+            self.assertIsNotNone(payload["schedule"])
+        finally:
+            backend_main.ScheduleGenerator.generate = original_generate
+
+    def test_generation_timeout_marks_job_failed(self):
+        from backend import main as backend_main
+
+        original_timeout = backend_main.JOB_TIMEOUT_SECONDS
+        original_max_attempts = backend_main.DEFAULT_JOB_MAX_ATTEMPTS
+        original_generate = backend_main.ScheduleGenerator.generate
+
+        def slow_generate(self):
+            time.sleep(0.01)
+            return {"Mon_1": {}}
+
+        backend_main.JOB_TIMEOUT_SECONDS = 0.001
+        backend_main.DEFAULT_JOB_MAX_ATTEMPTS = 1
+        backend_main.ScheduleGenerator.generate = slow_generate
+        try:
+            response = client.post("/api/generate", json=make_valid_request())
+            self.assertEqual(response.status_code, 200)
+            job_id = response.json()["job_id"]
+
+            schedule_response = wait_for_job(job_id, timeout_seconds=10.0)
+            self.assertIsNotNone(schedule_response)
+            self.assertEqual(schedule_response.status_code, 200)
+            payload = schedule_response.json()
+            self.assertEqual(payload["status"], "failed")
+            self.assertEqual(payload["error"]["error"], "timeout")
+        finally:
+            backend_main.JOB_TIMEOUT_SECONDS = original_timeout
+            backend_main.DEFAULT_JOB_MAX_ATTEMPTS = original_max_attempts
+            backend_main.ScheduleGenerator.generate = original_generate
 
     def test_e2e_small_dataset_generation_flow(self):
         payload = make_scalable_request(

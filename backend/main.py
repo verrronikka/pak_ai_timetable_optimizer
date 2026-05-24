@@ -66,6 +66,7 @@ job_worker_lock = threading.Lock()
 job_worker_started = False
 DEFAULT_JOB_MAX_ATTEMPTS = 2
 DEFAULT_JOB_TIMEOUT_SECONDS = 15
+JOB_TIMEOUT_SECONDS = DEFAULT_JOB_TIMEOUT_SECONDS
 
 
 def ensure_generation_job_schema() -> None:
@@ -501,7 +502,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
                 "metrics": run_metrics,
             }
 
-        timeout_seconds = job.timeout_seconds or DEFAULT_JOB_TIMEOUT_SECONDS
+        timeout_seconds = job.timeout_seconds or JOB_TIMEOUT_SECONDS
         if result and elapsed_seconds > timeout_seconds:
             retryable = (job.attempts or 0) < (job.max_attempts or 0)
             error_response = build_error_response(
@@ -588,7 +589,7 @@ async def generate_schedule(
             request_payload=request_payload,
             attempts=0,
             max_attempts=DEFAULT_JOB_MAX_ATTEMPTS,
-            timeout_seconds=DEFAULT_JOB_TIMEOUT_SECONDS,
+            timeout_seconds=JOB_TIMEOUT_SECONDS,
         )
         db.add(job)
         db.commit()
