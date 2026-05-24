@@ -1,0 +1,58 @@
+name: Performance benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 1"
+
+jobs:
+  backend-performance-benchmark:
+    name: Backend performance benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run performance regression benchmark
+        run: |
+          python -m pytest backend/tests/test_performance_regression.py -q
+
+      - name: Copy dated performance report
+        if: always()
+        run: |
+          python - <<'PY'
+          from datetime import UTC, datetime
+          from pathlib import Path
+          import shutil
+
+          latest_report = Path("reports/generated/performance_regression_latest.json")
+          if not latest_report.exists():
+              raise SystemExit(f"Missing benchmark report: {latest_report}")
+
+          dated_name = datetime.now(UTC).strftime("performance_regression_%Y-%m-%d.json")
+          dated_report = latest_report.with_name(dated_name)
+          dated_report.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copy2(latest_report, dated_report)
+          print(f"Created dated benchmark report: {dated_report}")
+          PY
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-performance-benchmark
+          path: |
+            reports/generated/performance_regression_latest.json
+            reports/generated/performance_regression_*.json
+          if-no-files-found: warn
