@@ -34,6 +34,9 @@ class GenerationJob(Base):
     error_message = Column(String, nullable=True)
     max_search_steps = Column(Integer, default=DEFAULT_MAX_SEARCH_STEPS)
     request_payload = Column(JSON, nullable=True)
+    attempts = Column(Integer, default=0)
+    max_attempts = Column(Integer, default=2)
+    timeout_seconds = Column(Integer, default=15)
 
 
 class TeacherInput(BaseModel):

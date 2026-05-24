@@ -64,6 +64,8 @@ Base.metadata.create_all(bind=engine)
 job_queue: Queue[tuple[int, dict[str, Any]]] = Queue()
 job_worker_lock = threading.Lock()
 job_worker_started = False
+DEFAULT_JOB_MAX_ATTEMPTS = 2
+DEFAULT_JOB_TIMEOUT_SECONDS = 15
 
 
 def ensure_generation_job_schema() -> None:
@@ -77,6 +79,21 @@ def ensure_generation_job_schema() -> None:
         if "request_payload" not in columns:
             connection.exec_driver_sql(
                 "ALTER TABLE generation_jobs ADD COLUMN request_payload JSON"
+            )
+        if "attempts" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE generation_jobs ADD COLUMN attempts INTEGER"
+            )
+        if "max_attempts" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE generation_jobs ADD COLUMN max_attempts INTEGER"
+            )
+        if "timeout_seconds" not in columns:
+            connection.exec_driver_sql(
+                (
+                    "ALTER TABLE generation_jobs ADD COLUMN "
+                    "timeout_seconds INTEGER"
+                )
             )
 
 
@@ -101,6 +118,22 @@ def job_worker_loop() -> None:
                 job_id,
                 ScheduleRequest.model_validate(request_payload),
             )
+            db = SessionLocal()
+            try:
+                job = cast(
+                    Any,
+                    db.query(GenerationJob)
+                    .filter(GenerationJob.id == job_id)
+                    .first(),
+                )
+                if (
+                    job is not None
+                    and job.status == "pending"
+                    and isinstance(job.request_payload, dict)
+                ):
+                    enqueue_generation_job(job.id, job.request_payload)
+            finally:
+                db.close()
         finally:
             job_queue.task_done()
 
@@ -374,6 +407,7 @@ def run_generation(job_id: int, request: ScheduleRequest):
         if job is None:
             raise RuntimeError(f"Generation job {job_id} not found")
 
+        job.attempts = (job.attempts or 0) + 1
         job.status = "running"
         db.commit()
 
@@ -467,6 +501,33 @@ def run_generation(job_id: int, request: ScheduleRequest):
                 "metrics": run_metrics,
             }
 
+        timeout_seconds = job.timeout_seconds or DEFAULT_JOB_TIMEOUT_SECONDS
+        if result and elapsed_seconds > timeout_seconds:
+            retryable = (job.attempts or 0) < (job.max_attempts or 0)
+            error_response = build_error_response(
+                error="timeout",
+                message="Выполнение генерации превысило допустимое время.",
+                details={
+                    "elapsed_seconds": round(elapsed_seconds, 6),
+                    "timeout_seconds": timeout_seconds,
+                    "attempts": job.attempts,
+                    "max_attempts": job.max_attempts,
+                },
+                job_id=job_id,
+            )
+            job.result = {
+                "error": error_response.model_dump(),
+                "solve_status": generator.solve_status,
+                "search_steps": generator.search_steps,
+                "metrics": run_metrics,
+            }
+            job.error_message = None if retryable else error_response.message
+            job.status = "pending" if retryable else "failed"
+            if retryable:
+                job.completed_at = None
+            else:
+                job.completed_at = datetime.now(UTC)
+
         db.commit()
 
     except Exception as e:
@@ -478,16 +539,17 @@ def run_generation(job_id: int, request: ScheduleRequest):
             db.close()
             return
 
-        job.status = "failed"
+        retryable = (job.attempts or 0) < (job.max_attempts or 0)
         error_response = build_error_response(
             error="server_error",
             message="Внутренняя ошибка сервера при генерации расписания.",
             details={"exception": str(e)},
             job_id=job_id,
         )
-        job.error_message = error_response.message
         job.result = {"error": error_response.model_dump()}
-        job.completed_at = datetime.now(UTC)
+        job.status = "pending" if retryable else "failed"
+        job.error_message = None if retryable else error_response.message
+        job.completed_at = None if retryable else datetime.now(UTC)
         db.commit()
 
     finally:
@@ -524,6 +586,9 @@ async def generate_schedule(
             status="pending",
             max_search_steps=request.max_search_steps,
             request_payload=request_payload,
+            attempts=0,
+            max_attempts=DEFAULT_JOB_MAX_ATTEMPTS,
+            timeout_seconds=DEFAULT_JOB_TIMEOUT_SECONDS,
         )
         db.add(job)
         db.commit()
