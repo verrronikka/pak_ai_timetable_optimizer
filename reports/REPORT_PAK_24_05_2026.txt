@@ -1,0 +1,86 @@
+ОТЧЕТ ПО ПРОЕКТУ AI-TIMETABLE-OPTIMIZER
+
+Команда:
+- Вероника Алпатова — DevOps + Team Lead
+- Екатерина Юдина — Backend-разработчик
+- Анастасия Мащковцева — Fullstack-разработчик
+- Даниил Шелестов — ML-специалист / алгоритмист
+
+Дата отчета: 2026-05-24
+Неделя 8 (с 19.05 по 25.05)
+
+РЕЗЮМЕ
+
+За неделю закрыта большая часть плана недели 8 по backend, frontend, ML и DevOps:
+- в CI добавлена проверка порога регрессии производительности и отдельный workflow для периодических бенчмарков,
+- подготовлен и опубликован runbook выпуска со сборкой, воспроизведением окружения, откатом и проверочными командами,
+- backend получил надёжный фоновый worker с сохранением request payload в БД, восстановлением после перезапуска, retries и timeout-поведением,
+- расширены backend-тесты сценариями восстановления, retries и timeout,
+- frontend Playwright smoke теперь проверяет реальный backend-режим и проблемные состояния `no_solution` и `limit_reached`,
+
+ЧТО БЫЛО РЕАЛИЗОВАНО ИЗ ЗАПЛАНИРОВАННОГО
+
+1) Вероника (DevOps + Team Lead)
+Статус: ВЫПОЛНЕНО
+- добавлена проверка порога регрессии производительности в `.github/workflows/ci-smoke.yml`,
+- добавлен отдельный workflow для периодических benchmark-ов и датированных результатов (`.github/workflows/performance-benchmarks.yml`),
+- подготовлен и оформлен release runbook (`docs/release-runbook.md`) с командами сборки, локального прогона, отката и верификации,
+- добавлены публикация Playwright HTML-отчёта и артефактов тестов в CI.
+
+2) Екатерина (Backend)
+Статус: ВЫПОЛНЕНО
+- реализован надёжный фоновый worker заданий с сохранением `request_payload` в БД и восстановлением задач после перезапуска,
+- добавлены retries и timeout-поведение для задач, включая сохранение статуса и повторный запуск при временных сбоях,
+- расширены интеграционные тесты сценариями восстановления, retries и timeout,
+- сохранены существующие API-контракты и endpoint-ы `/api/generate`, `/api/schedule/{job_id}` и `/api/metrics/{job_id}`.
+
+3) Анастасия (Frontend)
+Статус: ВЫПОЛНЕНО
+- расширены Playwright smoke-сценарии: проверка реального backend-потока и проблемных состояний `no_solution` и `limit_reached`,
+- в Playwright-конфиг добавлены сохранение HTML-отчёта, screenshot-ов, trace и video на сбоях,
+- сохранён и публикуется набор артефактов CI для smoke-прогона,
+- UI-поток остался совместим с текущими демо-режимами и отображением статусов.
+
+4) Даниил (ML / Алгоритмы)
+Статус: ВЫПОЛНЕНО
+- выполнен свежий прогон benchmark-ов solver на наборах demo/small/medium/large/tiny,
+- обновлена документация по производительности solver в `docs/solver-performance.md`,
+- подтверждено, что текущие лимиты `backend/solver_contraints.json` остаются рабочими и не требуют изменения,
+- зафиксированы актуальные показатели времени, памяти и шагов поиска для новых замеров.
+
+КЛЮЧЕВЫЕ АРТЕФАКТЫ НЕДЕЛИ
+
+- CI workflow: `.github/workflows/ci-smoke.yml`
+- Scheduled benchmarks: `.github/workflows/performance-benchmarks.yml`
+- Release runbook: `docs/release-runbook.md`
+- Backend worker: `backend/main.py`, `backend/db_models.py`
+- Backend tests: `backend/tests/test_api.py`
+- Frontend Playwright: `frontend/playwright.config.js`, `frontend/tests/ui-smoke.spec.js`
+- Solver benchmarks: `dev_alg/tuning/run_benchmarks.py`, `dev_alg/artifacts/benchmark_results.json`
+- Profiling docs: `docs/solver-performance.md`
+
+ПЛАН НА НЕДЕЛЮ 9
+
+Вероника (DevOps / Руководство):
+- добавить простой скрипт `scripts/collect_artifacts.py` и связанный шаг в CI, который собирает артефакты в `reports/generated`;
+- добавить workflow для создания draft‑релиза при пуше тега (`.github/workflows/release-draft.yml`);
+- прогнать `docs/release-checklist.md` локально и записать результат в `reports/generated/release_check_run.txt`;
+- явно задокументировать пути CI-артефактов в `docs/release-checklist.md`.
+
+Екатерина (Backend):
+- добавить idempotent SQL‑миграцию `backend/migrations/0001_add_request_payload.sql` для аудита и отката;
+- добавить тест `backend/tests/test_schema.py`, который проверяет наличие колонки `request_payload` в таблице `generation_jobs`;
+- добавить скрипт `backend/scripts/generate_tests_summary.py`, который запускает `pytest` и пишет `reports/generated/tests_summary.txt`;
+- добавить `backend/README.md` с инструкцией по применению миграций и откату.
+
+Анастасия (Frontend):
+- добавить `frontend/tests/ui-smoke-large.spec.js` — лёгкий вариант существующего smoke, использующий большой профиль;
+- изменить `frontend/playwright.config.js` так, чтобы `outputDir` указывал в `reports/generated/playwright` (для CI‑публикации);
+- добавить `docs/demo_instructions.md` с командами запуска демо и списком артефактов для показа;
+- добавить небольшую утилиту `frontend/scripts/capture_screenshots.js` (или npm script), запускающую Playwright для съёмки 3 контрольных скриншотов.
+
+Даниил (ML / Алгоритмы):
+- добавить `dev_alg/benchmark_config.json` с профилями (tiny..large) для финального прогона;
+- добавить скрипт `dev_alg/scripts/run_final_benchmarks.py`, который вызывает существующий runner и сохраняет `dev_alg/artifacts/benchmark_results_final.json`;
+- добавить скрипт `dev_alg/scripts/publish_benchmarks.py`, который копирует финальный JSON в `reports/generated`;
+- расширить `docs/solver-performance.md` разделом "Reproducibility" с командами для прогонов.
