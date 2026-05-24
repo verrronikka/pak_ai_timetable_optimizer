@@ -1,11 +1,13 @@
 import sys
+import threading
 import time
 import tracemalloc
 from datetime import UTC, datetime
 from pathlib import Path
+from queue import Empty, Queue
 from typing import Any, List, cast
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 dev_alg_path = str(Path(__file__).parent.parent / "dev_alg")
@@ -58,6 +60,96 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+
+job_queue: Queue[tuple[int, dict[str, Any]]] = Queue()
+job_worker_lock = threading.Lock()
+job_worker_started = False
+
+
+def ensure_generation_job_schema() -> None:
+    with engine.begin() as connection:
+        columns = {
+            row[1]
+            for row in connection.exec_driver_sql(
+                "PRAGMA table_info(generation_jobs)"
+            )
+        }
+        if "request_payload" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE generation_jobs ADD COLUMN request_payload JSON"
+            )
+
+
+ensure_generation_job_schema()
+
+
+def enqueue_generation_job(
+    job_id: int, request_payload: dict[str, Any]
+) -> None:
+    job_queue.put((job_id, request_payload))
+
+
+def job_worker_loop() -> None:
+    while True:
+        try:
+            job_id, request_payload = job_queue.get(timeout=1.0)
+        except Empty:
+            continue
+
+        try:
+            run_generation(
+                job_id,
+                ScheduleRequest.model_validate(request_payload),
+            )
+        finally:
+            job_queue.task_done()
+
+
+def start_job_worker() -> None:
+    global job_worker_started
+
+    with job_worker_lock:
+        if job_worker_started:
+            return
+
+        worker = threading.Thread(target=job_worker_loop, daemon=True)
+        worker.start()
+        job_worker_started = True
+
+
+def recover_pending_jobs() -> None:
+    db = SessionLocal()
+
+    try:
+        jobs = cast(
+            list[Any],
+            db.query(GenerationJob)
+            .filter(GenerationJob.status.in_(["pending", "running"]))
+            .all(),
+        )
+
+        for job in jobs:
+            if not isinstance(job.request_payload, dict):
+                continue
+            job.status = "pending"
+
+        db.commit()
+
+        for job in jobs:
+            if isinstance(job.request_payload, dict):
+                enqueue_generation_job(job.id, job.request_payload)
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
+def startup_job_worker() -> None:
+    ensure_generation_job_schema()
+    start_job_worker()
+    recover_pending_jobs()
+
+
+start_job_worker()
 
 
 def build_error_response(
@@ -420,15 +512,18 @@ async def health_check():
 
 @app.post("/api/generate", response_model=ScheduleResponse)
 async def generate_schedule(
-    request: ScheduleRequest, background_tasks: BackgroundTasks
+    request: ScheduleRequest,
 ):
     validate_generate_request(request)
 
     db = SessionLocal()
+    request_payload = request.model_dump()
 
     try:
         job = GenerationJob(
-            status="pending", max_search_steps=request.max_search_steps
+            status="pending",
+            max_search_steps=request.max_search_steps,
+            request_payload=request_payload,
         )
         db.add(job)
         db.commit()
@@ -437,7 +532,7 @@ async def generate_schedule(
     finally:
         db.close()
 
-    background_tasks.add_task(run_generation, job_id, request)
+    enqueue_generation_job(job_id, request_payload)
 
     return ScheduleResponse(
         job_id=job_id,
